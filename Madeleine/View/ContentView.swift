@@ -108,6 +108,7 @@ struct ContentView: View {
                 } label: {
                     VlogProjectRow(project: project)
                 }
+                .foregroundStyle(.primary)
             }
             .onDelete(perform: deleteProjects)
         }
@@ -126,9 +127,11 @@ struct ContentView: View {
                 Image(systemName: "plus")
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .foregroundStyle(.white)
                     .frame(width: 56, height: 56)
+                    .background(Color.accentColor)
+                    .clipShape(Circle())
             }
-            .glassEffect(.regular.interactive())
             .glassEffectID("newProject", in: glassNS)
         }
         .onChange(of: selectedPhotos) { _, newItems in
