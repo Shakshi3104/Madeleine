@@ -139,9 +139,12 @@ struct EditorView: View {
                 .accessibilityLabel("Preview")
 
                 Menu {
-                    Picker("Orientation", selection: $viewModel.orientation) {
+                    Picker("Orientation", selection: Binding(
+                        get: { viewModel.orientation },
+                        set: { viewModel.updateOrientation($0) }
+                    )) {
                         ForEach(VideoOrientation.allCases, id: \.self) { orientation in
-                            Label(orientation.rawValue, systemImage: orientation.systemImage)
+                            Label(orientation.displayName, systemImage: orientation.systemImage)
                         }
                     }
                 } label: {

@@ -12,13 +12,20 @@ import PhotosUI
 import Photos
 
 enum VideoOrientation: String, CaseIterable {
-    case portrait = "Portrait"
-    case landscape = "Landscape"
+    case portrait
+    case landscape
 
     var renderSize: CGSize {
         switch self {
         case .portrait: CGSize(width: 1080, height: 1920)
         case .landscape: CGSize(width: 1920, height: 1080)
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .portrait: "Portrait"
+        case .landscape: "Landscape"
         }
     }
 
@@ -64,6 +71,13 @@ final class EditorViewModel {
     init(project: VlogProject, extractedURLs: [UUID: URL]) {
         self.project = project
         self.extractedURLs = extractedURLs
+        self.orientation = VideoOrientation(rawValue: project.orientationRaw) ?? .portrait
+    }
+
+    func updateOrientation(_ newValue: VideoOrientation) {
+        orientation = newValue
+        project.orientationRaw = newValue.rawValue
+        project.updatedAt = .now
     }
 
     // MARK: - Preview

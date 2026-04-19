@@ -14,8 +14,6 @@ struct PreviewView: View {
 
     @State private var player: AVPlayer?
 
-    @Namespace private var glassNS
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -28,10 +26,6 @@ struct PreviewView: View {
                     ProgressView()
                 }
             }
-            .overlay(alignment: .bottom) {
-                playbackControls
-                    .padding(.bottom, 40)
-            }
             .navigationTitle("Preview")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -40,50 +34,13 @@ struct PreviewView: View {
                 }
             }
             .onAppear {
-                player = AVPlayer(url: url)
+                let newPlayer = AVPlayer(url: url)
+                player = newPlayer
+                newPlayer.play()
             }
             .onDisappear {
                 player?.pause()
                 player = nil
-            }
-        }
-    }
-
-    // MARK: - Playback Controls
-
-    private var playbackControls: some View {
-        GlassEffectContainer {
-            HStack(spacing: 20) {
-                Button {
-                    player?.seek(to: .zero)
-                    player?.play()
-                } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel("Restart")
-                .glassEffect()
-                .glassEffectID("restart", in: glassNS)
-
-                Button {
-                    player?.play()
-                } label: {
-                    Image(systemName: "play.fill")
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel("Play")
-                .glassEffect()
-                .glassEffectID("play", in: glassNS)
-
-                Button {
-                    player?.pause()
-                } label: {
-                    Image(systemName: "pause.fill")
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel("Pause")
-                .glassEffect()
-                .glassEffectID("pause", in: glassNS)
             }
         }
     }
