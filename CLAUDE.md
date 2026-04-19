@@ -6,7 +6,7 @@ This document tells Claude Code how to work inside this repo. Read it before mak
 
 ## 1. Overview
 
-**Madeleine** 🍪 is an iOS app that stitches user-selected Live Photos into a short travel vlog video.
+**Madeleine** 🥧 is an iOS app that stitches user-selected Live Photos into a short travel vlog video.
 
 The name comes from the "Madeleine moment" in Proust's *In Search of Lost Time* — a sensory cue (tasting a tea-soaked madeleine) that unexpectedly revives a flood of childhood memories. Live Photos function the same way for travel: one tiny clip from a still photo can pull back the whole day.
 
@@ -20,13 +20,14 @@ This project follows the naming convention of Shakshi3104's other apps: a desser
 |---|---|
 | UI | SwiftUI with Liquid Glass |
 | State | `@Observable` macro (NOT `ObservableObject`) |
-| Persistence | SwiftData with CloudKit private sync |
-| Media refs | `PHAsset.cloudIdentifier` (see §3) |
+| Persistence | SwiftData (CloudKit private sync planned, currently disabled) |
+| Media refs | `PHAsset.localIdentifier` (will migrate to `cloudIdentifier` when CloudKit is enabled) |
 | Minimum iOS | **26.0** |
 | Bundle ID | `com.shakshi.Madeleine` |
-| CloudKit Container | `iCloud.com.shakshi.Madeleine` |
+| CloudKit Container | `iCloud.com.shakshi.Madeleine` (not yet configured) |
 | Xcode | 26.0+ |
 | Swift | 6.1+ |
+| Accent Color | Golden Orange `#F5A623` |
 
 ---
 
@@ -35,14 +36,14 @@ This project follows the naming convention of Shakshi3104's other apps: a desser
 We do **not** duplicate photo or video data inside the app.
 
 - **Source Live Photos** live in the user's Photos library. They sync across devices via iCloud Photos.
-- **Exported videos** are saved to Camera Roll. They also sync via iCloud Photos.
-- **SwiftData + CloudKit** holds only the *editing recipe*: project metadata, clip order, trim duration, and `cloudIdentifier` strings that point into the Photos library.
+- **Exported videos** are shared via the system share sheet (not saved to Camera Roll automatically).
+- **SwiftData** holds only the *editing recipe*: project metadata, clip order, trim duration, and asset identifiers that point into the Photos library.
 
-### Always use `cloudIdentifier`, never `localIdentifier` for persistence
+### Current: `localIdentifier` / Future: `cloudIdentifier`
 
-`PHAsset.localIdentifier` differs between devices. An asset on iPhone and the "same" asset on iPad have different local IDs. `cloudIdentifier` (iOS 16+) is stable across devices for the same iCloud Photos library.
+Currently, `VlogClip.sourceCloudID` stores `PHAsset.localIdentifier` values. When CloudKit sync is enabled, these should be migrated to `cloudIdentifier` for cross-device support.
 
-Use `Services/CloudIdentifierResolver.swift` for all conversions:
+Use `Service/CloudIdentifierResolver.swift` for conversions:
 - Save: `localIdentifier` → `cloudIdentifier` before writing to SwiftData
 - Load: `cloudIdentifier` → `PHAsset` before any Photos/AVFoundation work
 
@@ -60,7 +61,7 @@ Prefer these over opening Xcode. Use them to verify your changes compile.
 
 ```bash
 xcodebuild -scheme Madeleine \
-  -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Debug \
   build
 ```
@@ -94,7 +95,7 @@ If a build fails, read the output carefully and fix the errors before reporting 
 
 ### Naming
 
-- Views end with `View` (e.g. `HomeView`)
+- Views end with `View` (e.g. `EditorView`)
 - ViewModels end with `ViewModel`
 - Services are nouns (`LivePhotoExtractor`, `VideoComposer`)
 
@@ -118,31 +119,27 @@ Standard SwiftUI containers pick up Liquid Glass just by recompiling against Xco
 
 Use `.glassEffect()` only for floating controls over content:
 
-- **EditorView**: tool buttons floating over the preview
-- **PreviewView**: playback controls
-- **HomeView**: the "New Vlog" FAB
+- **EditorView**: bottom toolbar (share, play, orientation, add)
+- **ContentView**: the "New Vlog" FAB (uses accent color background, not glass)
 
 Pattern for grouped morphable buttons:
 
 ```swift
 @Namespace private var glassNS
 
-GlassEffectContainer {
-    HStack(spacing: 12) {
-        Button { ... } label: { Image(systemName: "play.fill") }
-            .glassEffect()
-            .glassEffectID("play", in: glassNS)
-        Button { ... } label: { Image(systemName: "square.and.arrow.up") }
-            .glassEffect()
-            .glassEffectID("export", in: glassNS)
-    }
+HStack(spacing: 24) {
+    Button { ... } label: { Image(systemName: "play.fill").frame(width: 56, height: 56) }
+    Menu { ... } label: { Image(systemName: "rectangle.portrait.rotate").frame(width: 56, height: 56) }
 }
+.padding(.horizontal, 6)
+.glassEffect()
+.glassEffectID("center", in: glassNS)
 ```
 
 For a single interactive button:
 
 ```swift
-Button { ... } label: { Image(systemName: "plus") }
+Button { ... } label: { Image(systemName: "square.and.arrow.up").frame(width: 56, height: 56) }
     .glassEffect(.regular.interactive())
 ```
 
@@ -219,74 +216,74 @@ Swift 6.1 / iOS 26 concurrency checking is strict. Follow these rules to avoid d
 
 ```
 Madeleine/
-├── App/
-│   └── MadeleineApp.swift              (entry point, ModelContainer setup)
-├── Models/
-│   ├── VlogProject.swift               @Model
-│   └── VlogClip.swift                  @Model
-├── Features/
-│   ├── Home/
-│   │   └── HomeView.swift
+├── MadeleineApp.swift              entry point, ModelContainer setup
+├── Model/
+│   ├── VlogProject.swift           @Model
+│   └── VlogClip.swift              @Model
+├── View/
+│   ├── ContentView.swift           project list + NavigationStack root
 │   ├── Extracting/
-│   │   └── ExtractingView.swift        progress while extracting Live Photos
+│   │   └── ExtractingView.swift    progress while extracting Live Photos
 │   ├── Editor/
-│   │   ├── EditorView.swift
-│   │   ├── EditorViewModel.swift       @Observable
-│   │   └── TimelineView.swift
-│   ├── Preview/
-│   │   └── PreviewView.swift           wraps AVKit's VideoPlayer
-│   └── Export/
-│       └── ExportProgressView.swift    modal with progress bar
-├── Services/
+│   │   ├── EditorView.swift        Photos-app-style toolbar
+│   │   ├── EditorViewModel.swift   @Observable
+│   │   └── ClipTimelineView.swift  clip list with thumbnails
+│   └── Preview/
+│       └── PreviewView.swift       wraps AVKit VideoPlayer, auto-play
+├── Service/
 │   ├── CloudIdentifierResolver.swift   local ⇔ cloud ID conversion
 │   ├── LivePhotoExtractor.swift        PHAsset → paired video URL
 │   ├── VideoComposer.swift             [VlogClip] → AVComposition
 │   ├── VideoExporter.swift             AVAssetExportSession wrapper
 │   └── PhotoLibrarySaver.swift         save to Camera Roll, return cloudID
-└── Resources/
-    └── Assets.xcassets
+└── Assets.xcassets
+    └── AccentColor (Golden Orange #F5A623)
 ```
 
 ---
 
 ## 11. Implementation Status
 
-Keep this checklist updated as work progresses. Check off items when they compile, build, and have been manually smoke-tested.
-
 ### Phase 1 — Foundation
-- [ ] Xcode project created with SwiftData + Host in CloudKit
-- [ ] Background Modes (Remote notifications) capability added
-- [ ] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`
-- [ ] Deployment Target set to iOS 26.0
-- [ ] `MadeleineApp.swift` configured with `cloudKitDatabase: .private(...)`
-- [ ] Template `Item.swift` and `ContentView.swift` deleted
+- [x] Xcode project created with SwiftData + Host in CloudKit
+- [x] Background Modes (Remote notifications) capability added
+- [x] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`
+- [x] Deployment Target set to iOS 26.0
+- [x] `MadeleineApp.swift` configured (CloudKit currently disabled)
+- [x] Template `Item.swift` and `ContentView.swift` replaced
 
 ### Phase 2 — Models
-- [ ] `Models/VlogProject.swift`
-- [ ] `Models/VlogClip.swift`
+- [x] `Model/VlogProject.swift`
+- [x] `Model/VlogClip.swift`
 
 ### Phase 3 — Services
-- [ ] `Services/CloudIdentifierResolver.swift`
-- [ ] `Services/LivePhotoExtractor.swift`
-- [ ] `Services/VideoComposer.swift`
-- [ ] `Services/VideoExporter.swift`
-- [ ] `Services/PhotoLibrarySaver.swift`
+- [x] `Service/CloudIdentifierResolver.swift`
+- [x] `Service/LivePhotoExtractor.swift`
+- [x] `Service/VideoComposer.swift`
+- [x] `Service/VideoExporter.swift`
+- [x] `Service/PhotoLibrarySaver.swift`
 
 ### Phase 4 — Screens
-- [ ] `HomeView` (with `@Query`, Glass FAB)
-- [ ] PhotosPicker integration
-- [ ] `ExtractingView`
-- [ ] `EditorView` + `EditorViewModel` (Glass toolbar)
-- [ ] `TimelineView`
-- [ ] `PreviewView` (Glass playback controls)
-- [ ] `ExportProgressView`
+- [x] `ContentView` (project list, accent-color FAB, NavigationStack)
+- [x] PhotosPicker integration (with `photoLibrary: .shared()`)
+- [x] `ExtractingView` (progress, error state with Go Back)
+- [x] `EditorView` + `EditorViewModel` (Photos-app-style bottom bar)
+- [x] `ClipTimelineView` (thumbnails, filenames, dates, swipe-delete, reorder)
+- [x] `PreviewView` (auto-play, standard VideoPlayer controls)
+- [x] Share sheet via `UIActivityViewController`
 
 ### Phase 5 — Polish
-- [ ] Empty states (no projects, no Live Photos available)
-- [ ] Source-missing handling (asset deleted from Photos)
-- [ ] iCloud download progress when extracting
-- [ ] App icon, launch screen
-- [ ] Real-device testing on iPhone and iPad for iCloud sync
+- [x] Empty states (no projects)
+- [x] Non-Live Photo auto-removal during extraction
+- [x] Accessibility labels on all icon buttons
+- [x] Accent color (Golden Orange #F5A623)
+- [x] Date-based default project titles
+- [x] Orientation persistence per project
+- [x] ModelContainer crash recovery
+- [ ] App icon
+- [ ] Privacy policy
+- [ ] CloudKit container setup + cloudIdentifier migration
+- [ ] Real-device testing on iPad for iCloud sync
 
 ---
 
@@ -294,32 +291,40 @@ Keep this checklist updated as work progresses. Check off items when they compil
 
 ### Workflow
 1. **New file → stop and ask the user first** (§8). Do not run `touch` or `Write` for new `.swift` files.
-2. **Temporary URLs are never persisted.** If you need a reference that survives app launches, use a `cloudIdentifier`.
+2. **Temporary URLs are never persisted.** If you need a reference that survives app launches, use an asset identifier.
+3. **Documents in `docs/` use date-prefixed filenames** (e.g. `2026-04-19_color_compare.html`).
 
 ### CloudKit × SwiftData
-3. Every `@Model` property needs a default or must be Optional (§7.1).
-4. `@Relationship` must be defined on both sides (§7.2).
-5. Do not use `@Attribute(.unique)` (§7.3).
+4. Every `@Model` property needs a default or must be Optional (§7.1).
+5. `@Relationship` must be defined on both sides (§7.2).
+6. Do not use `@Attribute(.unique)` (§7.3).
 
 ### Photos
-6. **Always use `cloudIdentifier` for persistence**, not `localIdentifier`.
-7. **`cloudIdentifier` is not immediately available after save.** When saving a newly exported video, retry the `cloudIdentifierMappings` call for up to ~10 seconds before giving up.
+7. **Use `photoLibrary: .shared()` in PhotosPicker** to get `itemIdentifier`.
 8. **`PhotosPickerItem.itemIdentifier` can be nil.** Skip items that have no identifier rather than crashing.
-9. **Set `isNetworkAccessAllowed = true`** on `PHAssetResourceRequestOptions` and `PHLivePhotoRequestOptions` — users may have source photos in iCloud but not on-device.
+9. **Set `isNetworkAccessAllowed = true`** on `PHAssetResourceRequestOptions` — users may have source photos in iCloud but not on-device.
+10. **Skip duplicate photos** when adding to an existing project (compare `sourceCloudID`).
 
 ### Media
-10. **Apply `preferredTransform`** via `AVMutableVideoCompositionLayerInstruction`. Without it, portrait clips will render sideways.
-11. **Mute audio for MVP.** Stitched one-second clips have audible cuts. Audio / BGM comes in v1.2.
-12. **Trim from the center of each Live Photo.** The first ~0.5 s is usually motion blur from raising the phone.
+11. **Apply `preferredTransform`** and normalize translation before scaling in `VideoComposer`.
+12. **Mute audio for MVP.** Stitched one-second clips have audible cuts. Audio / BGM comes later.
+13. **Trim from the center of each Live Photo.** The first ~0.5 s is usually motion blur.
+14. **Clamp trim duration** to source video duration to avoid AVFoundation errors.
 
 ### Liquid Glass
-13. **Do not nest `.glassEffect()`**. Use `GlassEffectContainer` to group, not nesting.
-14. **Do not apply glass to content itself** (photos, video frames, long text blocks).
-15. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist. Do not hallucinate APIs.
-16. **Do not override sheet backgrounds.** Remove `.presentationBackground(.clear)` etc. to let iOS 26 auto-apply glass.
+15. **Do not nest `.glassEffect()`**. Use grouping within a single `.glassEffect()`.
+16. **Do not apply glass to content itself** (photos, video frames, long text blocks).
+17. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist.
+18. **Do not override sheet backgrounds.**
+
+### UI Conventions
+19. **No TabView** — single NavigationStack flow.
+20. **ContentView is the root** — no separate HomeView.
+21. **Button tint** — bottom toolbar uses `.tint(.primary)`, FAB uses accent color background.
+22. **Date format** — `yyyy/MM/dd HH:mm:ss` for clip capture dates.
 
 ### Testing
-17. **Simulator cannot capture Live Photos.** To test, drag existing Live Photo bundles into Photos.app of the simulator, or test on a real device.
+23. **Simulator cannot capture Live Photos.** Test on a real device with existing Live Photos.
 
 ---
 
@@ -330,3 +335,4 @@ Keep this checklist updated as work progresses. Check off items when they compil
 - If a build fails, fix errors yourself — do not ask the user to fix Swift compile errors unless you genuinely cannot.
 - If a task requires a new file, UI asset, or capability change, stop and tell the user what to do in Xcode.
 - Update §11 Implementation Status as you complete items.
+- The user's other projects (Calories, Waffle, Shortcake) use `View/` + `ContentView` as root — follow this pattern.
