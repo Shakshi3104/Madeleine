@@ -60,7 +60,7 @@ struct ContentView: View {
                     projectList
                 }
             }
-            .navigationTitle("Madeleine")
+            .navigationTitle("")
             .navigationDestination(for: AppDestination.self) { destination in
                 switch destination {
                 case .extracting(let project):

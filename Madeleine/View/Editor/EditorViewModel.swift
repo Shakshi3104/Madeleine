@@ -22,8 +22,8 @@ enum VideoOrientation: String, CaseIterable {
 
     var systemImage: String {
         switch self {
-        case .portrait: "rectangle.portrait"
-        case .landscape: "rectangle"
+        case .portrait: "rectangle.portrait.rotate"
+        case .landscape: "rectangle.landscape.rotate"
         }
     }
 }
