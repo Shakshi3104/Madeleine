@@ -61,6 +61,7 @@ struct PreviewView: View {
                     Image(systemName: "arrow.counterclockwise")
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Restart")
                 .glassEffect()
                 .glassEffectID("restart", in: glassNS)
 
@@ -70,6 +71,7 @@ struct PreviewView: View {
                     Image(systemName: "play.fill")
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Play")
                 .glassEffect()
                 .glassEffectID("play", in: glassNS)
 
@@ -79,6 +81,7 @@ struct PreviewView: View {
                     Image(systemName: "pause.fill")
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Pause")
                 .glassEffect()
                 .glassEffectID("pause", in: glassNS)
             }

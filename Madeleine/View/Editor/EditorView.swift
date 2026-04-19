@@ -120,6 +120,7 @@ struct EditorView: View {
                     .frame(width: 56, height: 56)
             }
             .disabled(viewModel.sortedClips.isEmpty || viewModel.isExporting)
+            .accessibilityLabel("Share")
             .glassEffect(.regular.interactive())
             .glassEffectID("share", in: glassNS)
 
@@ -135,6 +136,7 @@ struct EditorView: View {
                         .frame(width: 56, height: 56)
                 }
                 .disabled(viewModel.sortedClips.isEmpty)
+                .accessibilityLabel("Preview")
 
                 Menu {
                     Picker("Orientation", selection: $viewModel.orientation) {
@@ -147,6 +149,7 @@ struct EditorView: View {
                         .font(.title2)
                         .frame(width: 56, height: 56)
                 }
+                .accessibilityLabel("Orientation")
             }
             .padding(.horizontal, 6)
             .glassEffect()
@@ -166,6 +169,7 @@ struct EditorView: View {
                     .foregroundStyle(.primary)
                     .frame(width: 56, height: 56)
             }
+            .accessibilityLabel("Add Live Photos")
             .glassEffect(.regular.interactive())
             .glassEffectID("add", in: glassNS)
             .onChange(of: additionalPhotos) { _, newItems in

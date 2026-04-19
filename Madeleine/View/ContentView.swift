@@ -47,7 +47,6 @@ struct ContentView: View {
 
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
-    @State private var photoAuthStatus: PHAuthorizationStatus = .notDetermined
 
     @Namespace private var glassNS
 
@@ -78,12 +77,6 @@ struct ContentView: View {
             if navigationPath.isEmpty {
                 newProjectButton
                     .padding()
-            }
-        }
-        .task {
-            photoAuthStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-            if photoAuthStatus == .notDetermined {
-                photoAuthStatus = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
             }
         }
     }
@@ -132,6 +125,7 @@ struct ContentView: View {
                     .background(Color.accentColor)
                     .clipShape(Circle())
             }
+            .accessibilityLabel("New Vlog")
             .glassEffectID("newProject", in: glassNS)
         }
         .onChange(of: selectedPhotos) { _, newItems in
@@ -146,7 +140,10 @@ struct ContentView: View {
 
     @discardableResult
     private func createProject(from items: [PhotosPickerItem]) -> VlogProject {
-        let project = VlogProject(title: "New Vlog")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+        let defaultTitle = "Vlog \(dateFormatter.string(from: Date()))"
+        let project = VlogProject(title: defaultTitle)
         modelContext.insert(project)
 
         // PHAsset の情報を取得してソート用に収集
