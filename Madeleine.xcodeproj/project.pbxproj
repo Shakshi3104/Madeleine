@@ -12,6 +12,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		746B9D892F94D0DA00710EA3 /* Exceptions for "materials" folder in "Madeleine" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				madeleine.png,
+			);
+			target = 74BE39582F94775B00EF2E37 /* Madeleine */;
+		};
 		74BE39662F94775E00EF2E37 /* Exceptions for "Madeleine" folder in "Madeleine" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -24,6 +31,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7401F3CB2F94AC4C00DAD8DB /* materials */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				746B9D892F94D0DA00710EA3 /* Exceptions for "materials" folder in "Madeleine" target */,
+			);
 			path = materials;
 			sourceTree = "<group>";
 		};
