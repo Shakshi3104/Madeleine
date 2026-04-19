@@ -11,6 +11,8 @@ import SwiftData
 struct EditorView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: EditorViewModel
+    @State private var isEditingTitle = false
+    @State private var editingTitle = ""
 
     @Namespace private var glassNS
 
@@ -33,6 +35,26 @@ struct EditorView: View {
             }
         )
         .navigationTitle(viewModel.project.title)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button {
+                        editingTitle = viewModel.project.title
+                        isEditingTitle = true
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+
+                    Picker("Orientation", selection: $viewModel.orientation) {
+                        ForEach(VideoOrientation.allCases, id: \.self) { orientation in
+                            Label(orientation.rawValue, systemImage: orientation.systemImage)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
         .overlay(alignment: .bottom) {
             toolBar
                 .padding(.bottom)
@@ -53,6 +75,14 @@ struct EditorView: View {
             if let url = viewModel.exportedFileURL {
                 ShareSheet(url: url)
             }
+        }
+        .alert("Rename Vlog", isPresented: $isEditingTitle) {
+            TextField("Title", text: $editingTitle)
+            Button("OK") {
+                viewModel.project.title = editingTitle
+                viewModel.project.updatedAt = .now
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .alert(
             "Error",

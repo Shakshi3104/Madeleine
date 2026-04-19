@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		7401F3CA2F94AC4700DAD8DB /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		74BE39592F94775B00EF2E37 /* Madeleine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Madeleine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -21,6 +22,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7401F3CB2F94AC4C00DAD8DB /* materials */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = materials;
+			sourceTree = "<group>";
+		};
 		74BE395B2F94775B00EF2E37 /* Madeleine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -45,6 +51,8 @@
 		74BE39502F94775B00EF2E37 = {
 			isa = PBXGroup;
 			children = (
+				7401F3CB2F94AC4C00DAD8DB /* materials */,
+				7401F3CA2F94AC4700DAD8DB /* README.md */,
 				74BE395B2F94775B00EF2E37 /* Madeleine */,
 				74BE395A2F94775B00EF2E37 /* Products */,
 			);
@@ -74,6 +82,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				7401F3CB2F94AC4C00DAD8DB /* materials */,
 				74BE395B2F94775B00EF2E37 /* Madeleine */,
 			);
 			name = Madeleine;

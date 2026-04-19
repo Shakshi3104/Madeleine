@@ -9,11 +9,31 @@ import SwiftUI
 import SwiftData
 import AVFoundation
 
+enum VideoOrientation: String, CaseIterable {
+    case portrait = "Portrait"
+    case landscape = "Landscape"
+
+    var renderSize: CGSize {
+        switch self {
+        case .portrait: CGSize(width: 1080, height: 1920)
+        case .landscape: CGSize(width: 1920, height: 1080)
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .portrait: "rectangle.portrait"
+        case .landscape: "rectangle"
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class EditorViewModel {
     var project: VlogProject
     var extractedURLs: [UUID: URL]
+    var orientation: VideoOrientation = .portrait
     var isExporting = false
     var exportProgress: Double = 0
     var showExportProgress = false
@@ -49,7 +69,8 @@ final class EditorViewModel {
             print("🎬 Starting compose...")
             let result = try await composer.compose(
                 clips: clips,
-                videoURLs: extractedURLs
+                videoURLs: extractedURLs,
+                renderSize: orientation.renderSize
             )
             print("🎬 Compose done. Starting export...")
             let url = try await exporter.export(
@@ -75,7 +96,8 @@ final class EditorViewModel {
         do {
             let result = try await composer.compose(
                 clips: sortedClips,
-                videoURLs: extractedURLs
+                videoURLs: extractedURLs,
+                renderSize: orientation.renderSize
             )
             exportProgress = 0.5
 

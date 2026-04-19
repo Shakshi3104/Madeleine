@@ -47,8 +47,7 @@ struct ClipRow: View {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .short
+        f.dateFormat = "yyyy/MM/dd HH:mm:ss"
         return f
     }()
 

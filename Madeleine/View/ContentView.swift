@@ -75,8 +75,10 @@ struct ContentView: View {
             }
         }
         .overlay(alignment: .bottomTrailing) {
-            newProjectButton
-                .padding()
+            if navigationPath.isEmpty {
+                newProjectButton
+                    .padding()
+            }
         }
         .task {
             photoAuthStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
