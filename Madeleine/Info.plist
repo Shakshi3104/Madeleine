@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Madeleine needs access to your photo library to read Live Photos for creating vlog videos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Madeleine needs access to save exported vlog videos to your Camera Roll.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
