@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madeleine — Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F6EFE3;
+  --cream-dark: #EADFC9;
+  --ink: #2B2319;
+  --ink-soft: #5C4F3E;
+  --ink-mute: #988775;
+  --tea: #B8804A;
+  --tea-deep: #8F5A2C;
+  --accent: #C86B3B;
+  --white: #FFFCF6;
+  --divider: rgba(43, 35, 25, 0.08);
+  --shadow-sm: 0 1px 2px rgba(43, 35, 25, 0.05);
+  --shadow-md: 0 4px 20px rgba(143, 90, 44, 0.08);
+  --shadow-lg: 0 12px 40px rgba(143, 90, 44, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(circle at 20% 10%, #F9F2E4 0%, transparent 40%),
+    radial-gradient(circle at 80% 60%, #EEDFC8 0%, transparent 50%),
+    #F1E6D2;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  padding: 48px 24px 80px;
+  overflow-x: hidden;
+}
+
+.page-header {
+  max-width: 1400px;
+  margin: 0 auto 56px;
+  text-align: center;
+}
+
+.brand {
+  font-family: 'Fraunces', serif;
+  font-size: 64px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.brand-emoji {
+  font-size: 48px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.tagline {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink-soft);
+  font-weight: 400;
+  max-width: 540px;
+  margin: 0 auto 8px;
+  line-height: 1.5;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--ink-mute);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screens {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 48px 32px;
+  justify-items: center;
+}
+
+.screen-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.screen-label {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+}
+
+.screen-label b {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 8px;
+}
+
+/* ========================= iPhone Frame ========================= */
+.iphone {
+  width: 340px;
+  height: 720px;
+  background: #1a1a1a;
+  border-radius: 48px;
+  padding: 10px;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(0,0,0,0.1);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.iphone::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 26px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 10;
+}
+
+.screen {
+  width: 100%;
+  height: 100%;
+  background: var(--cream);
+  border-radius: 38px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Status bar */
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 32px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.status-bar .time { padding-top: 4px; }
+.status-bar .right { display: flex; gap: 5px; align-items: center; padding-top: 4px; }
+
+/* Shared navigation */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  flex-shrink: 0;
+}
+
+.nav-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.nav-btn {
+  font-size: 15px;
+  color: var(--tea-deep);
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(184, 128, 74, 0.08);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: none;
+  color: var(--tea-deep);
+}
+
+/* Content scroll */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.content::-webkit-scrollbar { display: none; }
+
+/* ========================= 1. Home ========================= */
+.home-hero {
+  padding: 16px 24px 24px;
+}
+
+.home-hero .kicker {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 8px;
+}
+
+.home-hero .brand-big {
+  font-family: 'Fraunces', serif;
+  font-size: 44px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.home-hero .brand-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+}
+
+.section-label {
+  padding: 20px 24px 10px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 600;
+}
+
+.project-grid {
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.project-card {
+  aspect-ratio: 9/16;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.project-card:hover { transform: translateY(-2px); }
+
+.project-card.c1 {
+  background: linear-gradient(135deg, #D4A574 0%, #8B5A2B 60%, #4A2C0F 100%);
+}
+.project-card.c2 {
+  background: linear-gradient(160deg, #E5C391 0%, #B8804A 50%, #6B3E1A 100%);
+}
+.project-card.c3 {
+  background: linear-gradient(200deg, #C8A379 0%, #7A5636 70%);
+}
+.project-card.c4 {
+  background: linear-gradient(180deg, #D8BC95 0%, #9A6D3F 100%);
+}
+
+.project-card .title {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: #FFFCF6;
+  font-weight: 500;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.project-card .date {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-size: 10px;
+  color: rgba(255,252,246,0.85);
+  letter-spacing: 0.05em;
+}
+
+.project-card .duration {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.35);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.empty-slot {
+  aspect-ratio: 9/16;
+  border-radius: 14px;
+  border: 1.5px dashed var(--ink-mute);
+  opacity: 0.4;
+  display: grid;
+  place-items: center;
+  color: var(--ink-mute);
+  font-size: 11px;
+}
+
+/* FAB */
+.fab {
+  position: absolute;
+  bottom: 28px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 24px rgba(43, 35, 25, 0.3);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+}
+.fab:hover { transform: scale(1.05); }
+.fab svg { width: 26px; height: 26px; }
+
+/* ========================= 2. Picker ========================= */
+.picker-header {
+  padding: 16px 24px 8px;
+}
+
+.picker-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.picker-hint {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.picker-counter {
+  margin: 16px 24px;
+  padding: 14px 18px;
+  background: rgba(184, 128, 74, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter-num {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--tea-deep);
+  line-height: 1;
+}
+
+.counter-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.live-icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.photo-grid {
+  padding: 0 16px 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.photo-thumb {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-thumb::after {
+  content: 'LIVE';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 8px;
+  font-weight: 700;
+  color: white;
+  background: rgba(0,0,0,0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.05em;
+}
+
+.photo-thumb.selected {
+  outline: 3px solid var(--tea-deep);
+  outline-offset: -3px;
+}
+
+.photo-thumb.selected::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: var(--tea-deep);
+  border-radius: 50%;
+  z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.pt-1 { background: linear-gradient(135deg, #D4A574, #8B5A2B); }
+.pt-2 { background: linear-gradient(160deg, #E5C391, #B8804A); }
+.pt-3 { background: linear-gradient(200deg, #A8824F, #5C3F1F); }
+.pt-4 { background: linear-gradient(180deg, #C8A379, #7A5636); }
+.pt-5 { background: linear-gradient(135deg, #B8804A, #6B3E1A); }
+.pt-6 { background: linear-gradient(160deg, #D8BC95, #9A6D3F); }
+.pt-7 { background: linear-gradient(180deg, #9A7448, #4E3318); }
+.pt-8 { background: linear-gradient(200deg, #C6A880, #846037); }
+.pt-9 { background: linear-gradient(135deg, #E0C49A, #A87A48); }
+
+.picker-footer {
+  padding: 12px 20px 24px;
+  border-top: 1px solid var(--divider);
+  background: var(--cream);
+}
+
+.primary-btn {
+  width: 100%;
+  height: 52px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 26px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.primary-btn:active { transform: scale(0.98); }
+.primary-btn:disabled {
+  background: var(--ink-mute);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================= 3. Editor ========================= */
+.editor-preview {
+  margin: 8px 16px 0;
+  aspect-ratio: 9/16;
+  max-height: 280px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #D4A574, #6B3E1A);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.play-btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+.play-btn-inner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,252,246,0.9);
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(8px);
+}
+.play-btn-inner svg { width: 20px; height: 20px; margin-left: 3px; color: var(--ink); }
+
+.scrubber {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: rgba(255,252,246,0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.scrubber-fill {
+  width: 35%;
+  height: 100%;
+  background: rgba(255,252,246,0.95);
+}
+
+.timeline-label {
+  padding: 16px 20px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-label .label {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 600;
+}
+
+.timeline-label .count {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.timeline {
+  padding: 0 16px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.timeline::-webkit-scrollbar { display: none; }
+
+.clip {
+  flex-shrink: 0;
+  width: 64px;
+  height: 96px;
+  border-radius: 8px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.clip:hover { transform: translateY(-2px); }
+
+.clip.selected {
+  outline: 2.5px solid var(--tea-deep);
+  outline-offset: 2px;
+}
+
+.clip-num {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-family: 'Fraunces', serif;
+  font-size: 10px;
+  color: white;
+  background: rgba(0,0,0,0.4);
+  padding: 1px 5px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.clip-dur {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 9px;
+  color: white;
+  background: rgba(0,0,0,0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+}
+
+.clip.add {
+  border: 1.5px dashed var(--ink-mute);
+  opacity: 0.6;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--ink-mute);
+}
+.clip.add:hover { opacity: 1; }
+
+.trim-section {
+  margin: 16px 20px;
+  padding: 16px;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.trim-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.trim-head .label {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.trim-head .value {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--tea-deep);
+}
+
+.trim-head .value .unit {
+  font-size: 12px;
+  color: var(--ink-mute);
+  font-style: italic;
+  margin-left: 2px;
+}
+
+.slider {
+  position: relative;
+  height: 24px;
+  cursor: pointer;
+}
+
+.slider-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--cream-dark);
+  border-radius: 2px;
+}
+
+.slider-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--tea-deep);
+  border-radius: 2px;
+  width: 33%;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: 33%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  background: var(--cream);
+  border: 2.5px solid var(--tea-deep);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--ink-mute);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+}
+
+.editor-footer {
+  padding: 12px 20px 24px;
+  border-top: 1px solid var(--divider);
+  background: var(--cream);
+  display: flex;
+  gap: 12px;
+}
+
+.secondary-btn {
+  flex: 1;
+  height: 52px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 26px;
+  font-family: 'DM Sans';
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.editor-footer .primary-btn { flex: 2; }
+
+/* ========================= 4. Export ========================= */
+.export-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 35, 25, 0.4);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  border-radius: 38px;
+}
+
+.export-card {
+  width: 100%;
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 32px 24px 24px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.export-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(184, 128, 74, 0.12);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.export-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--tea-deep);
+  border-top-color: transparent;
+  border-right-color: transparent;
+  animation: spin 1.4s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.export-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.export-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--cream-dark);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 68%;
+  background: linear-gradient(90deg, var(--tea), var(--tea-deep));
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.progress-text {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-text .pct {
+  font-weight: 500;
+  color: var(--tea-deep);
+}
+
+.cancel-btn {
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: none;
+  font-family: 'DM Sans';
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ========================= 5. Preview ========================= */
+.preview-screen {
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-nav {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--cream);
+}
+
+.preview-nav .nav-title { color: var(--cream); font-size: 17px; }
+.preview-nav .icon-btn { color: var(--cream); background: rgba(246,239,227,0.1); }
+
+.preview-stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.preview-frame {
+  width: 100%;
+  aspect-ratio: 9/16;
+  max-height: 440px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #D4A574, #8B5A2B, #4A2C0F);
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.preview-controls {
+  padding: 0 24px 32px;
+  color: var(--cream);
+}
+
+.preview-time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: rgba(246,239,227,0.7);
+  margin-top: 10px;
+}
+
+.preview-scrubber {
+  height: 3px;
+  background: rgba(246,239,227,0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.preview-scrubber .fill {
+  width: 42%;
+  height: 100%;
+  background: var(--cream);
+}
+
+.preview-scrubber .thumb {
+  position: absolute;
+  top: 50%;
+  left: 42%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--cream);
+  border-radius: 50%;
+}
+
+.preview-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.preview-buttons .control {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(246,239,227,0.1);
+  border: none;
+  color: var(--cream);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.preview-buttons .main-play {
+  width: 64px;
+  height: 64px;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+/* ========================= Annotations ========================= */
+.notes-section {
+  max-width: 1200px;
+  margin: 72px auto 0;
+  padding: 0 16px;
+}
+
+.notes-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.notes-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.note-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--tea);
+}
+
+.note-num {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--tea-deep);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.note-heading {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.note-body {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.footer-quote {
+  max-width: 600px;
+  margin: 80px auto 24px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.footer-quote .attr {
+  display: block;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-mute);
+  margin-top: 12px;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 640px) {
+  .brand { font-size: 44px; }
+  .iphone { transform: scale(0.9); }
+  .page-header { margin-bottom: 32px; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1 class="brand">Madeleine<span class="brand-emoji">🍪</span></h1>
+  <p class="tagline">— A taste of a memory, stitched from Live Photos.</p>
+  <p class="meta">Wireframe v1 · iOS 18 · SwiftUI</p>
+</header>
+
+<div class="screens">
+
+  <!-- ============ 1. HOME ============ -->
+  <div class="screen-wrap">
+    <div class="iphone">
+      <div class="screen">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="right">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="0" width="3" height="11" rx="0.5"/><rect x="4.67" y="2" width="3" height="9" rx="0.5"/><rect x="9.33" y="4" width="3" height="7" rx="0.5"/><rect x="14" y="6" width="3" height="5" rx="0.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <div class="home-hero">
+          <div class="kicker">Today</div>
+          <h2 class="brand-big">Madeleine</h2>
+          <p class="brand-sub">a taste of a memory</p>
+        </div>
+
+        <div class="section-label">Your travels</div>
+
+        <div class="content">
+          <div class="project-grid">
+            <div class="project-card c1">
+              <span class="date">SEP 14</span>
+              <span class="duration">0:22</span>
+              <div class="title">Kyoto,<br/>late autumn</div>
+            </div>
+            <div class="project-card c2">
+              <span class="date">AUG 03</span>
+              <span class="duration">0:18</span>
+              <div class="title">Lisbon streets</div>
+            </div>
+            <div class="project-card c3">
+              <span class="date">JUL 21</span>
+              <span class="duration">0:30</span>
+              <div class="title">Okinawa, blue</div>
+            </div>
+            <div class="project-card c4">
+              <span class="date">JUN 08</span>
+              <span class="duration">0:14</span>
+              <div class="title">Weekend in Hakone</div>
+            </div>
+            <div class="empty-slot">more soon</div>
+            <div class="empty-slot">—</div>
+          </div>
+          <div style="height: 100px;"></div>
+        </div>
+
+        <button class="fab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="screen-label"><b>1. Home</b>過去の作品一覧 + 新規作成</div>
+  </div>
+
+  <!-- ============ 2. PICKER ============ -->
+  <div class="screen-wrap">
+    <div class="iphone">
+      <div class="screen">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="right">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="0" width="3" height="11" rx="0.5"/><rect x="4.67" y="2" width="3" height="9" rx="0.5"/><rect x="9.33" y="4" width="3" height="7" rx="0.5"/><rect x="14" y="6" width="3" height="5" rx="0.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <div class="nav-bar">
+          <button class="nav-btn">キャンセル</button>
+          <button class="icon-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4-4"/></svg>
+          </button>
+        </div>
+
+        <div class="picker-header">
+          <h1 class="picker-title">Live Photoを選ぶ</h1>
+          <p class="picker-hint">旅の記憶の素材を。<br/>並び順はあとで調整できます。</p>
+        </div>
+
+        <div class="picker-counter">
+          <div>
+            <div class="counter-num">7<span style="font-size: 14px; color: var(--ink-mute); font-style: italic;"> / 30</span></div>
+            <div class="counter-label">selected Live Photos</div>
+          </div>
+          <div class="live-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8F5A2C" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07a10 10 0 010-14.14M16.24 7.76a6 6 0 010 8.49M7.76 16.24a6 6 0 010-8.49"/></svg>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="photo-grid">
+            <div class="photo-thumb pt-1 selected"></div>
+            <div class="photo-thumb pt-2 selected"></div>
+            <div class="photo-thumb pt-3"></div>
+            <div class="photo-thumb pt-4 selected"></div>
+            <div class="photo-thumb pt-5 selected"></div>
+            <div class="photo-thumb pt-6"></div>
+            <div class="photo-thumb pt-7 selected"></div>
+            <div class="photo-thumb pt-8"></div>
+            <div class="photo-thumb pt-9 selected"></div>
+            <div class="photo-thumb pt-1"></div>
+            <div class="photo-thumb pt-2"></div>
+            <div class="photo-thumb pt-3 selected"></div>
+            <div class="photo-thumb pt-4"></div>
+            <div class="photo-thumb pt-5"></div>
+            <div class="photo-thumb pt-6"></div>
+          </div>
+        </div>
+
+        <div class="picker-footer">
+          <button class="primary-btn">エディタへ進む</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label"><b>2. Picker</b>Live Photoを複数選択</div>
+  </div>
+
+  <!-- ============ 3. EDITOR ============ -->
+  <div class="screen-wrap">
+    <div class="iphone">
+      <div class="screen">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="right">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="0" width="3" height="11" rx="0.5"/><rect x="4.67" y="2" width="3" height="9" rx="0.5"/><rect x="9.33" y="4" width="3" height="7" rx="0.5"/><rect x="14" y="6" width="3" height="5" rx="0.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <div class="nav-bar">
+          <button class="nav-btn">‹ 戻る</button>
+          <div class="nav-title" style="font-size:15px;">Kyoto, late autumn</div>
+          <button class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="content">
+          <div class="editor-preview">
+            <div class="play-btn">
+              <div class="play-btn-inner">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <div class="scrubber"><div class="scrubber-fill"></div></div>
+          </div>
+
+          <div class="timeline-label">
+            <span class="label">Timeline</span>
+            <span class="count">7 clips · 7.0 sec</span>
+          </div>
+
+          <div class="timeline">
+            <div class="clip pt-1"><span class="clip-num">1</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-2"><span class="clip-num">2</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-4 selected"><span class="clip-num">3</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-5"><span class="clip-num">4</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-7"><span class="clip-num">5</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-9"><span class="clip-num">6</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip pt-3"><span class="clip-num">7</span><span class="clip-dur">1.0s</span></div>
+            <div class="clip add">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </div>
+
+          <div class="trim-section">
+            <div class="trim-head">
+              <div>
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); font-weight: 600; margin-bottom: 2px;">Clip #3</div>
+                <div class="label">Duration</div>
+              </div>
+              <div class="value">1.0<span class="unit">sec</span></div>
+            </div>
+            <div class="slider">
+              <div class="slider-track"></div>
+              <div class="slider-fill"></div>
+              <div class="slider-thumb"></div>
+            </div>
+            <div class="slider-ticks">
+              <span>0.5s</span><span>1.0s</span><span>1.5s</span><span>2.0s</span><span>3.0s</span>
+            </div>
+          </div>
+
+          <div style="height: 100px;"></div>
+        </div>
+
+        <div class="editor-footer">
+          <button class="secondary-btn">プレビュー</button>
+          <button class="primary-btn">書き出す</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label"><b>3. Editor</b>タイムライン + 尺調整</div>
+  </div>
+
+  <!-- ============ 4. EXPORT ============ -->
+  <div class="screen-wrap">
+    <div class="iphone">
+      <div class="screen" style="position:relative;">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="right">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="0" width="3" height="11" rx="0.5"/><rect x="4.67" y="2" width="3" height="9" rx="0.5"/><rect x="9.33" y="4" width="3" height="7" rx="0.5"/><rect x="14" y="6" width="3" height="5" rx="0.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <!-- Dim the editor underneath -->
+        <div style="opacity: 0.3; pointer-events: none;">
+          <div class="nav-bar">
+            <button class="nav-btn">‹ 戻る</button>
+            <div class="nav-title" style="font-size:15px;">Kyoto, late autumn</div>
+            <div style="width: 36px;"></div>
+          </div>
+          <div class="editor-preview" style="margin: 8px 16px 0;"></div>
+          <div class="timeline-label">
+            <span class="label">Timeline</span>
+          </div>
+          <div class="timeline">
+            <div class="clip pt-1"></div>
+            <div class="clip pt-2"></div>
+            <div class="clip pt-4"></div>
+            <div class="clip pt-5"></div>
+          </div>
+        </div>
+
+        <div class="export-overlay">
+          <div class="export-card">
+            <div class="export-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8F5A2C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <h2 class="export-title">Stitching memories</h2>
+            <p class="export-sub">クリップを繋いでいます。<br/>このままお待ちください。</p>
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+              <span>4 of 7 clips</span>
+              <span class="pct">68%</span>
+            </div>
+            <button class="cancel-btn">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label"><b>4. Export</b>書き出し進捗(モーダル)</div>
+  </div>
+
+  <!-- ============ 5. PREVIEW ============ -->
+  <div class="screen-wrap">
+    <div class="iphone">
+      <div class="screen preview-screen">
+        <div class="status-bar" style="color: var(--cream);">
+          <span class="time">9:41</span>
+          <span class="right">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="0" width="3" height="11" rx="0.5"/><rect x="4.67" y="2" width="3" height="9" rx="0.5"/><rect x="9.33" y="4" width="3" height="7" rx="0.5"/><rect x="14" y="6" width="3" height="5" rx="0.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <div class="preview-nav">
+          <button class="icon-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M6 18L18 6"/></svg>
+          </button>
+          <div class="nav-title">プレビュー</div>
+          <button class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+        </div>
+
+        <div class="preview-stage">
+          <div class="preview-frame">
+            <div style="position:absolute; top:12px; left:12px; right:12px; display:flex; gap:3px;">
+              <div style="flex:1; height:2px; background: var(--cream); border-radius:1px;"></div>
+              <div style="flex:1; height:2px; background: var(--cream); border-radius:1px;"></div>
+              <div style="flex:1; height:2px; background: var(--cream); border-radius:1px; opacity:0.5;"></div>
+              <div style="flex:1; height:2px; background: rgba(246,239,227,0.25); border-radius:1px;"></div>
+              <div style="flex:1; height:2px; background: rgba(246,239,227,0.25); border-radius:1px;"></div>
+              <div style="flex:1; height:2px; background: rgba(246,239,227,0.25); border-radius:1px;"></div>
+              <div style="flex:1; height:2px; background: rgba(246,239,227,0.25); border-radius:1px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-controls">
+          <div class="preview-scrubber">
+            <div class="fill"></div>
+            <div class="thumb"></div>
+          </div>
+          <div class="preview-time">
+            <span>0:03</span>
+            <span>0:07</span>
+          </div>
+          <div class="preview-buttons">
+            <button class="control">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20L9 12l10-8v16zM5 4h2v16H5V4z"/></svg>
+            </button>
+            <button class="control main-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+            </button>
+            <button class="control">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM17 4h2v16h-2V4z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label"><b>5. Preview</b>全画面プレビュー再生</div>
+  </div>
+
+</div>
+
+<!-- ========================= NOTES ========================= -->
+<section class="notes-section">
+  <h2 class="notes-title">Design notes</h2>
+  <p class="notes-sub">— decisions behind the wireframe</p>
+
+  <div class="notes-grid">
+    <div class="note-card">
+      <div class="note-num">01</div>
+      <div class="note-heading">パレット</div>
+      <div class="note-body">
+        クリーム、セピア、紅茶色。紅茶に浸したマドレーヌをそのまま色にした。<br/>
+        黒ではなくダークブラウンを基調色にして温度を残す。
+      </div>
+    </div>
+    <div class="note-card">
+      <div class="note-num">02</div>
+      <div class="note-heading">タイポグラフィ</div>
+      <div class="note-body">
+        見出しに Fraunces (セリフ・ブック系)、本文に DM Sans。<br/>
+        情緒のあるセリフを要所に使い、UI操作は読みやすいサンセリフに。
+      </div>
+    </div>
+    <div class="note-card">
+      <div class="note-num">03</div>
+      <div class="note-heading">タイムライン</div>
+      <div class="note-body">
+        Editor の中心は横スクロールのタイムライン。<br/>
+        タップで選択→下の尺スライダーで0.5〜3.0秒を調整。<br/>
+        長押しで並び替え、スワイプで削除。
+      </div>
+    </div>
+    <div class="note-card">
+      <div class="note-num">04</div>
+      <div class="note-heading">書き出し文言</div>
+      <div class="note-body">
+        "Stitching memories" とした。<br/>
+        プログレスは「4 of 7 clips」のようにクリップ単位で見せて、処理の手触りを伝える。
+      </div>
+    </div>
+    <div class="note-card">
+      <div class="note-num">05</div>
+      <div class="note-heading">FAB</div>
+      <div class="note-body">
+        Home画面のFABはインク色のまる。<br/>
+        Shakshi3104の既存アプリ(Waffle/Mille)の落ち着いたトーンを踏襲し、派手色は使わない。
+      </div>
+    </div>
+    <div class="note-card">
+      <div class="note-num">06</div>
+      <div class="note-heading">Live Photo表示</div>
+      <div class="note-body">
+        Pickerのサムネ左上に「LIVE」バッジ。<br/>
+        選択中は紅茶色の枠 + 右上にチェックマーク。iOS 18 PhotosPickerの標準スタイルに寄せている。
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-quote">
+  "…the taste was that of the little crumb of madeleine<br/>which on Sunday mornings at Combray<br/>my aunt Léonie used to give me."
+  <span class="attr">— Marcel Proust, <em>In Search of Lost Time</em></span>
+</div>
+
+</body>
+</html>
