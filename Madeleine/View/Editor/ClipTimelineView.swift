@@ -32,6 +32,11 @@ struct ClipTimelineView: View {
             .onMove { source, destination in
                 onMove(source, destination)
             }
+
+            // ボトムバーとの被り防止
+            Color.clear
+                .frame(height: 80)
+                .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
         .environment(\.editMode, $editMode)
