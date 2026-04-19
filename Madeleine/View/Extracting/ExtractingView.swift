@@ -10,6 +10,7 @@ import SwiftData
 
 struct ExtractingView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     let project: VlogProject
     let onComplete: ([UUID: URL]) -> Void
 
@@ -19,28 +20,37 @@ struct ExtractingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            ProgressView(value: viewModel.progress) {
-                Text("Extracting Live Photos…")
-                    .font(.headline)
-            } currentValueLabel: {
-                Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 40)
-
-            if viewModel.skippedCount > 0 {
-                Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
-                    .font(.caption)
+            if viewModel.isComplete && viewModel.extractedURLs.isEmpty {
+                // 全件失敗
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 48))
                     .foregroundStyle(.orange)
-            }
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                Text("No Live Photos could be extracted.")
+                    .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+
+                Button("Go Back") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            } else {
+                ProgressView(value: viewModel.progress) {
+                    Text("Extracting Live Photos…")
+                        .font(.headline)
+                } currentValueLabel: {
+                    Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 40)
+
+                if viewModel.skippedCount > 0 {
+                    Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
             }
 
             Spacer()
@@ -49,7 +59,9 @@ struct ExtractingView: View {
         .navigationBarBackButtonHidden()
         .task {
             await viewModel.extract(project: project, modelContext: modelContext)
-            onComplete(viewModel.extractedURLs)
+            if !viewModel.extractedURLs.isEmpty {
+                onComplete(viewModel.extractedURLs)
+            }
         }
     }
 }
@@ -62,8 +74,8 @@ final class ExtractingViewModel {
     var progress: Double = 0
     var completedCount: Int = 0
     var totalCount: Int = 0
-    var errorMessage: String?
     var skippedCount: Int = 0
+    var isComplete = false
 
     private(set) var extractedURLs: [UUID: URL] = [:]
 
@@ -72,7 +84,10 @@ final class ExtractingViewModel {
     func extract(project: VlogProject, modelContext: ModelContext) async {
         let clips = (project.clips ?? []).sorted { $0.order < $1.order }
         totalCount = clips.count
-        guard totalCount > 0 else { return }
+        guard totalCount > 0 else {
+            isComplete = true
+            return
+        }
 
         var failedClips: [VlogClip] = []
 
@@ -104,10 +119,10 @@ final class ExtractingViewModel {
             clip.order = index
         }
 
-        if extractedURLs.isEmpty {
-            errorMessage = "No Live Photos could be extracted."
-        } else if !failedClips.isEmpty {
+        if !failedClips.isEmpty {
             skippedCount = failedClips.count
         }
+
+        isComplete = true
     }
 }
