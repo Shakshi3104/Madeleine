@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
+import Photos
 
 struct EditorView: View {
     @Environment(\.modelContext) private var modelContext
@@ -14,6 +16,7 @@ struct EditorView: View {
     @State private var isEditingTitle = false
     @State private var editingTitle = ""
     @State private var isReordering = false
+    @State private var additionalPhotos: [PhotosPickerItem] = []
 
     @Namespace private var glassNS
 
@@ -69,14 +72,14 @@ struct EditorView: View {
             }
         }
         .overlay {
-            if viewModel.isGeneratingPreview || viewModel.isExporting {
+            if viewModel.isGeneratingPreview || viewModel.isExporting || viewModel.isAddingClips {
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
                     VStack(spacing: 16) {
                         ProgressView()
                             .controlSize(.large)
-                        Text(viewModel.isExporting ? "Exporting…" : "Generating Preview…")
+                        Text(viewModel.loadingMessage)
                             .font(.subheadline)
                             .foregroundStyle(.white)
                     }
@@ -151,17 +154,27 @@ struct EditorView: View {
 
             Spacer()
 
-            // 右: Live Photo 追加（将来実装）
-            Button {
-                // TODO: Add Live Photos
-            } label: {
+            // 右: Live Photo 追加
+            PhotosPicker(
+                selection: $additionalPhotos,
+                maxSelectionCount: 30,
+                matching: .livePhotos,
+                photoLibrary: .shared()
+            ) {
                 Image(systemName: "plus")
                     .font(.title2)
+                    .foregroundStyle(.primary)
                     .frame(width: 56, height: 56)
             }
-            .disabled(true)
             .glassEffect(.regular.interactive())
             .glassEffectID("add", in: glassNS)
+            .onChange(of: additionalPhotos) { _, newItems in
+                guard !newItems.isEmpty else { return }
+                Task {
+                    await viewModel.addClips(from: newItems, modelContext: modelContext)
+                }
+                additionalPhotos = []
+            }
         }
         .padding(.horizontal)
         .padding(.bottom, 8)

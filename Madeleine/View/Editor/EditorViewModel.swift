@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
+import PhotosUI
+import Photos
 
 enum VideoOrientation: String, CaseIterable {
     case portrait = "Portrait"
@@ -36,6 +38,7 @@ final class EditorViewModel {
     var orientation: VideoOrientation = .portrait
     var isGeneratingPreview = false
     var isExporting = false
+    var isAddingClips = false
     var exportProgress: Double = 0
     var showExportProgress = false
     var showPreview = false
@@ -46,6 +49,13 @@ final class EditorViewModel {
 
     private let composer = VideoComposer()
     private let exporter = VideoExporter()
+    private let extractor = LivePhotoExtractor()
+
+    var loadingMessage: String {
+        if isAddingClips { return "Adding Live Photos…" }
+        if isExporting { return "Exporting…" }
+        return "Generating Preview…"
+    }
 
     var sortedClips: [VlogClip] {
         (project.clips ?? []).sorted { $0.order < $1.order }
@@ -111,6 +121,50 @@ final class EditorViewModel {
             isExporting = false
             errorMessage = "Export failed: \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - Add Clips
+
+    func addClips(from items: [PhotosPickerItem], modelContext: ModelContext) async {
+        isAddingClips = true
+        defer { isAddingClips = false }
+
+        let currentMaxOrder = sortedClips.last?.order ?? -1
+        let existingIDs = Set(sortedClips.map(\.sourceCloudID))
+        var addedCount = 0
+
+        for item in items {
+            guard let localID = item.itemIdentifier else { continue }
+            guard !existingIDs.contains(localID) else { continue }
+
+            let assets = PHAsset.fetchAssets(withLocalIdentifiers: [localID], options: nil)
+            let filename = assets.firstObject.flatMap {
+                PHAssetResource.assetResources(for: $0).first?.originalFilename
+            } ?? ""
+            let captureDate = assets.firstObject?.creationDate
+
+            let clip = VlogClip(
+                order: currentMaxOrder + 1 + addedCount,
+                sourceCloudID: localID,
+                originalFilename: filename,
+                captureDate: captureDate
+            )
+            clip.project = project
+            modelContext.insert(clip)
+
+            // 動画を抽出
+            do {
+                let url = try await extractor.extractVideo(fromLocalID: localID)
+                extractedURLs[clip.id] = url
+                addedCount += 1
+            } catch {
+                print("Failed to extract added clip \(clip.id): \(error)")
+                modelContext.delete(clip)
+            }
+        }
+
+        reorderClips()
+        project.updatedAt = .now
     }
 
     // MARK: - Clip Management
