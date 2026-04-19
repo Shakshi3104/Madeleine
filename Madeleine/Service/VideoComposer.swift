@@ -91,23 +91,40 @@ struct VideoComposer {
     ) async throws -> CGAffineTransform {
         let naturalSize = try await track.load(.naturalSize)
         let preferred = try await track.load(.preferredTransform)
+
+        // preferredTransform を適用した後の実際の表示サイズ
         let transformed = CGRect(origin: .zero, size: naturalSize).applying(preferred)
         let displaySize = CGSize(
             width: abs(transformed.width),
             height: abs(transformed.height)
         )
+
+        // aspect fill: renderSize を完全に覆うスケール
         let scale = max(
             renderSize.width / displaySize.width,
             renderSize.height / displaySize.height
         )
-        let scaledSize = CGSize(
-            width: displaySize.width * scale,
-            height: displaySize.height * scale
+
+        // 1. 原点に正規化（preferredTransform の平行移動成分を除去）
+        let normalizeTranslation = CGAffineTransform(
+            translationX: -transformed.origin.x,
+            y: -transformed.origin.y
         )
-        let tx = (renderSize.width - scaledSize.width) / 2
-        let ty = (renderSize.height - scaledSize.height) / 2
+
+        // 2. スケーリング
+        let scaleTransform = CGAffineTransform(scaleX: scale, y: scale)
+
+        // 3. 中央配置
+        let scaledWidth = displaySize.width * scale
+        let scaledHeight = displaySize.height * scale
+        let centerTranslation = CGAffineTransform(
+            translationX: (renderSize.width - scaledWidth) / 2,
+            y: (renderSize.height - scaledHeight) / 2
+        )
+
         return preferred
-            .concatenating(CGAffineTransform(scaleX: scale, y: scale))
-            .concatenating(CGAffineTransform(translationX: tx, y: ty))
+            .concatenating(normalizeTranslation)
+            .concatenating(scaleTransform)
+            .concatenating(centerTranslation)
     }
 }
