@@ -6,6 +6,8 @@ Select Live Photos from your trips, and Madeleine extracts the hidden video clip
 
 The app name comes from Proust's *madeleine moment*: a sensory cue that unexpectedly revives a flood of memories.
 
+![](materials/madeleine.png)
+
 ## Requirements
 
 - Xcode 26.0+
