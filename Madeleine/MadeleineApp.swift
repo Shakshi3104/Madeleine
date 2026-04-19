@@ -12,9 +12,14 @@ import SwiftData
 struct MadeleineApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            VlogProject.self,
+            VlogClip.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .none  // TODO: Re-enable after CloudKit container is set up: .private("iCloud.com.shakshi.Madeleine")
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
