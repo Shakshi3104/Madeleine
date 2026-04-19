@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ExtractingView: View {
+    @Environment(\.modelContext) private var modelContext
     let project: VlogProject
     let onComplete: ([UUID: URL]) -> Void
 
@@ -27,6 +29,12 @@ struct ExtractingView: View {
             }
             .padding(.horizontal, 40)
 
+            if viewModel.skippedCount > 0 {
+                Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
@@ -40,7 +48,7 @@ struct ExtractingView: View {
         .navigationTitle("Extracting")
         .navigationBarBackButtonHidden()
         .task {
-            await viewModel.extract(project: project)
+            await viewModel.extract(project: project, modelContext: modelContext)
             onComplete(viewModel.extractedURLs)
         }
     }
@@ -55,40 +63,51 @@ final class ExtractingViewModel {
     var completedCount: Int = 0
     var totalCount: Int = 0
     var errorMessage: String?
+    var skippedCount: Int = 0
 
     private(set) var extractedURLs: [UUID: URL] = [:]
 
     private let extractor = LivePhotoExtractor()
 
-    func extract(project: VlogProject) async {
+    func extract(project: VlogProject, modelContext: ModelContext) async {
         let clips = (project.clips ?? []).sorted { $0.order < $1.order }
         totalCount = clips.count
         guard totalCount > 0 else { return }
 
+        var failedClips: [VlogClip] = []
+
         for clip in clips {
             do {
-                // sourceCloudID には現在 localIdentifier が入っている
-                // iCloud Photos が有効な環境では cloudIdentifier に変換される
                 let sourceID = clip.sourceCloudID
                 let url: URL
                 if sourceID.contains("/") {
-                    // localIdentifier の形式（例: "ABC123/L0/001"）
                     url = try await extractor.extractVideo(fromLocalID: sourceID)
                 } else {
-                    // cloudIdentifier の形式
                     url = try await extractor.extractVideo(fromCloudID: sourceID)
                 }
                 extractedURLs[clip.id] = url
             } catch {
                 print("Failed to extract clip \(clip.id): \(error)")
+                failedClips.append(clip)
             }
 
             completedCount += 1
             progress = Double(completedCount) / Double(totalCount)
         }
 
+        // 抽出に失敗したクリップを削除して順序を詰める
+        for clip in failedClips {
+            modelContext.delete(clip)
+        }
+        let remaining = (project.clips ?? []).sorted { $0.order < $1.order }
+        for (index, clip) in remaining.enumerated() {
+            clip.order = index
+        }
+
         if extractedURLs.isEmpty {
             errorMessage = "No Live Photos could be extracted."
+        } else if !failedClips.isEmpty {
+            skippedCount = failedClips.count
         }
     }
 }
