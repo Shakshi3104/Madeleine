@@ -13,6 +13,7 @@ struct EditorView: View {
     @State private var viewModel: EditorViewModel
     @State private var isEditingTitle = false
     @State private var editingTitle = ""
+    @State private var isReordering = false
 
     @Namespace private var glassNS
 
@@ -27,6 +28,7 @@ struct EditorView: View {
         ClipTimelineView(
             clips: viewModel.sortedClips,
             extractedURLs: viewModel.extractedURLs,
+            isReordering: $isReordering,
             onMove: { source, destination in
                 viewModel.moveClips(from: source, to: destination)
             },
@@ -34,46 +36,51 @@ struct EditorView: View {
                 viewModel.deleteClip(clip, modelContext: modelContext)
             }
         )
-        .navigationTitle(viewModel.project.title)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button {
-                        editingTitle = viewModel.project.title
-                        isEditingTitle = true
-                    } label: {
-                        Label("Rename", systemImage: "pencil")
-                    }
-
-                    Picker("Orientation", selection: $viewModel.orientation) {
-                        ForEach(VideoOrientation.allCases, id: \.self) { orientation in
-                            Label(orientation.rawValue, systemImage: orientation.systemImage)
-                        }
-                    }
+            ToolbarItem(placement: .principal) {
+                Button {
+                    editingTitle = viewModel.project.title
+                    isEditingTitle = true
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Text(viewModel.project.title)
+                        .font(.headline)
+                }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    isReordering.toggle()
+                } label: {
+                    Image(systemName: isReordering ? "checkmark" : "arrow.up.arrow.down")
                 }
             }
         }
         .overlay(alignment: .bottom) {
-            toolBar
-                .padding(.bottom)
+            bottomBar
         }
         .sheet(isPresented: $viewModel.showPreview) {
             if let url = viewModel.previewURL {
                 PreviewView(url: url)
             }
         }
-        .sheet(isPresented: $viewModel.showExportProgress) {
-            ExportProgressView(
-                progress: viewModel.exportProgress,
-                isComplete: viewModel.exportProgress >= 1.0,
-                onDone: { viewModel.showExportProgress = false }
-            )
-        }
         .sheet(isPresented: $viewModel.showShareSheet) {
             if let url = viewModel.exportedFileURL {
                 ShareSheet(url: url)
+            }
+        }
+        .overlay {
+            if viewModel.isGeneratingPreview || viewModel.isExporting {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text(viewModel.isExporting ? "Exporting…" : "Generating Preview…")
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                    }
+                }
             }
         }
         .alert("Rename Vlog", isPresented: $isEditingTitle) {
@@ -97,32 +104,68 @@ struct EditorView: View {
         }
     }
 
-    // MARK: - Toolbar
+    // MARK: - Bottom Bar (Photos app style)
 
-    private var toolBar: some View {
-        GlassEffectContainer {
-            HStack(spacing: 16) {
+    private var bottomBar: some View {
+        HStack {
+            // 左: シェアボタン
+            Button {
+                Task { await viewModel.exportAndShare() }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.title2)
+                    .frame(width: 56, height: 56)
+            }
+            .disabled(viewModel.sortedClips.isEmpty || viewModel.isExporting)
+            .glassEffect(.regular.interactive())
+            .glassEffectID("share", in: glassNS)
+
+            Spacer()
+
+            // 中央: プレビュー + 縦横切替（1つのガラスグループ）
+            HStack(spacing: 24) {
                 Button {
                     Task { await viewModel.generatePreview() }
                 } label: {
                     Image(systemName: "play.fill")
-                        .frame(width: 44, height: 44)
+                        .font(.title2)
+                        .frame(width: 56, height: 56)
                 }
                 .disabled(viewModel.sortedClips.isEmpty)
-                .glassEffect()
-                .glassEffectID("play", in: glassNS)
 
-                Button {
-                    Task { await viewModel.exportAndShare() }
+                Menu {
+                    Picker("Orientation", selection: $viewModel.orientation) {
+                        ForEach(VideoOrientation.allCases, id: \.self) { orientation in
+                            Label(orientation.rawValue, systemImage: orientation.systemImage)
+                        }
+                    }
                 } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .frame(width: 44, height: 44)
+                    Image(systemName: viewModel.orientation.systemImage)
+                        .font(.title2)
+                        .frame(width: 56, height: 56)
                 }
-                .disabled(viewModel.sortedClips.isEmpty || viewModel.isExporting)
-                .glassEffect()
-                .glassEffectID("export", in: glassNS)
             }
+            .padding(.horizontal, 6)
+            .glassEffect()
+            .glassEffectID("center", in: glassNS)
+
+            Spacer()
+
+            // 右: Live Photo 追加（将来実装）
+            Button {
+                // TODO: Add Live Photos
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .frame(width: 56, height: 56)
+            }
+            .disabled(true)
+            .glassEffect(.regular.interactive())
+            .glassEffectID("add", in: glassNS)
         }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .tint(.primary)
     }
 }
 

@@ -11,10 +11,11 @@ import AVFoundation
 struct ClipTimelineView: View {
     let clips: [VlogClip]
     let extractedURLs: [UUID: URL]
+    @Binding var isReordering: Bool
     let onMove: (IndexSet, Int) -> Void
     let onDelete: (VlogClip) -> Void
 
-    @State private var editMode: EditMode = .active
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
         List {
@@ -34,6 +35,14 @@ struct ClipTimelineView: View {
         }
         .listStyle(.plain)
         .environment(\.editMode, $editMode)
+        .onChange(of: isReordering) { _, newValue in
+            editMode = newValue ? .active : .inactive
+        }
+        .onChange(of: editMode) { _, newValue in
+            if newValue == .inactive {
+                isReordering = false
+            }
+        }
     }
 }
 

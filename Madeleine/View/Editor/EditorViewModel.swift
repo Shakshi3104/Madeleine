@@ -34,6 +34,7 @@ final class EditorViewModel {
     var project: VlogProject
     var extractedURLs: [UUID: URL]
     var orientation: VideoOrientation = .portrait
+    var isGeneratingPreview = false
     var isExporting = false
     var exportProgress: Double = 0
     var showExportProgress = false
@@ -58,30 +59,22 @@ final class EditorViewModel {
     // MARK: - Preview
 
     func generatePreview() async {
-        let clips = sortedClips
-        print("🎬 generatePreview: \(clips.count) clips, \(extractedURLs.count) URLs")
-        for clip in clips {
-            let hasURL = extractedURLs[clip.id] != nil
-            print("  clip \(clip.order): id=\(clip.id), hasURL=\(hasURL)")
-        }
+        isGeneratingPreview = true
+        defer { isGeneratingPreview = false }
 
         do {
-            print("🎬 Starting compose...")
             let result = try await composer.compose(
-                clips: clips,
+                clips: sortedClips,
                 videoURLs: extractedURLs,
                 renderSize: orientation.renderSize
             )
-            print("🎬 Compose done. Starting export...")
             let url = try await exporter.export(
                 composition: result.0,
                 videoComposition: result.1
             )
-            print("🎬 Export done: \(url)")
             previewURL = url
             showPreview = true
         } catch {
-            print("🎬 ERROR: \(error)")
             errorMessage = "Preview failed: \(error)"
         }
     }
@@ -90,8 +83,6 @@ final class EditorViewModel {
 
     func exportAndShare() async {
         isExporting = true
-        showExportProgress = true
-        exportProgress = 0.2
 
         do {
             let result = try await composer.compose(
@@ -99,25 +90,27 @@ final class EditorViewModel {
                 videoURLs: extractedURLs,
                 renderSize: orientation.renderSize
             )
-            exportProgress = 0.5
-
-            let outputURL = try await exporter.export(
+            let tempURL = try await exporter.export(
                 composition: result.0,
                 videoComposition: result.1
             )
-            exportProgress = 1.0
-            exportedFileURL = outputURL
+            // 共有用に適切なファイル名をつける
+            let sanitizedTitle = project.title
+                .lowercased()
+                .replacingOccurrences(of: " ", with: "-")
+            let namedURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(sanitizedTitle).mov")
+            try? FileManager.default.removeItem(at: namedURL)
+            try FileManager.default.copyItem(at: tempURL, to: namedURL)
+            exportedFileURL = namedURL
             project.updatedAt = .now
 
-            // ExportProgressView を閉じてから共有シートを表示
-            showExportProgress = false
-            try await Task.sleep(for: .milliseconds(800))
+            isExporting = false
             showShareSheet = true
         } catch {
+            isExporting = false
             errorMessage = "Export failed: \(error.localizedDescription)"
         }
-
-        isExporting = false
     }
 
     // MARK: - Clip Management
