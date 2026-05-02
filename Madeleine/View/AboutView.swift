@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    @Environment(\.dismiss) private var dismiss
-
     private static let websiteURL = URL(string: "https://shakshi3104.github.io/Madeleine/")!
     private static let privacyURL = URL(string: "https://shakshi3104.github.io/Madeleine/privacy.html")!
     private static let githubURL = URL(string: "https://github.com/Shakshi3104/Madeleine")!
@@ -58,11 +56,6 @@ struct AboutView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
         }
         .presentationDetents([.medium, .large])
     }
