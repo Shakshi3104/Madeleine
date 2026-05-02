@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Madeleine — Live Photos から旅の Vlog を</title>
+    <meta name="description" content="Live Photo に隠れた1秒を繋いで、旅の記憶をショートVlogに。">
+    <meta property="og:title" content="Madeleine">
+    <meta property="og:description" content="Live Photo に隠れた1秒を繋いで、旅の記憶をショートVlogに。">
+    <meta property="og:image" content="https://shakshi3104.github.io/Madeleine/assets/icon.png">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <style>
+        :root {
+            --bg: #FAF6EE;
+            --text: #3A2A1A;
+            --text-soft: #6B5840;
+            --accent: #F5A623;
+            --accent-deep: #B86F0A;
+            --card: #FFFFFF;
+            --border: #E8DFCD;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 96px 24px 64px;
+            text-align: center;
+        }
+
+        .hero img.icon {
+            width: 128px;
+            height: 128px;
+            border-radius: 28px;
+            box-shadow: 0 12px 32px rgba(184, 111, 10, 0.2);
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .hero .tagline-ja {
+            font-size: 20px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .hero .tagline-en {
+            font-size: 16px;
+            color: var(--text-soft);
+            font-style: italic;
+        }
+
+        /* Sections */
+        section {
+            padding: 64px 24px;
+        }
+
+        section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 48px;
+            letter-spacing: -0.01em;
+        }
+
+        /* About */
+        .about p {
+            font-size: 17px;
+            color: var(--text-soft);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .about p.lead {
+            font-size: 19px;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+
+        /* Features */
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .feature {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .feature .num {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #FFF;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .feature h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature .en {
+            font-size: 13px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .feature p {
+            color: var(--text-soft);
+            font-size: 16px;
+        }
+
+        /* Screenshot */
+        .screenshot {
+            text-align: center;
+        }
+
+        .screenshot img {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        /* Privacy */
+        .privacy {
+            background: var(--card);
+            margin: 32px 0;
+            border-radius: 24px;
+            padding: 48px 32px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .privacy h2 {
+            margin-bottom: 16px;
+        }
+
+        .privacy p {
+            color: var(--text-soft);
+            font-size: 16px;
+            max-width: 520px;
+            margin: 0 auto 24px;
+        }
+
+        .privacy a {
+            color: var(--accent-deep);
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 2px;
+        }
+
+        .privacy a:hover {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            padding: 64px 24px 48px;
+            text-align: center;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        footer .links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        footer a {
+            color: var(--text-soft);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--accent-deep);
+        }
+
+        footer .copyright {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero {
+                padding: 64px 24px 48px;
+            }
+            .hero h1 {
+                font-size: 36px;
+            }
+            .hero .tagline-ja {
+                font-size: 17px;
+            }
+            section {
+                padding: 48px 24px;
+            }
+            section h2 {
+                font-size: 24px;
+            }
+            .feature {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <img class="icon" src="assets/icon.png" alt="Madeleine icon">
+    <h1>Madeleine</h1>
+    <p class="tagline-ja">Live Photo に隠れた1秒を繋いで、旅の記憶をショート Vlog に。</p>
+    <p class="tagline-en">Turn the hidden seconds in your Live Photos into a travel vlog.</p>
+</header>
+
+<section class="about container">
+    <p class="lead">旅先で撮った Live Photo には、写真だけじゃ伝わらない動きと音が眠っています。</p>
+    <p>Madeleine は、選んだ Live Photo から動画部分だけを取り出し、繋ぎ合わせて1本のショート Vlog にします。プルーストのマドレーヌのように、小さな1秒が旅の記憶をふっと連れ戻してくれる。そんなアプリです。</p>
+</section>
+
+<section class="features container">
+    <h2>できること</h2>
+
+    <div class="feature">
+        <span class="num">1</span>
+        <h3>隠れた動画を取り出す</h3>
+        <p class="en">Hidden video, revealed</p>
+        <p>写真ライブラリから選んだ Live Photo の動画部分を自動で抽出。意識して動画を撮っていなくても、旅の動きが残ります。</p>
+    </div>
+
+    <div class="feature">
+        <span class="num">2</span>
+        <h3>1日を1本に繋ぐ</h3>
+        <p class="en">Stitch your day</p>
+        <p>抽出したクリップを撮影日時順に並べ、1秒ずつ切り出して連結。並び替え・削除・縦横切替も簡単に。</p>
+    </div>
+
+    <div class="feature">
+        <span class="num">3</span>
+        <h3>すべては端末の中で</h3>
+        <p class="en">Your photos stay yours</p>
+        <p>写真は外部サーバーに送信されません。すべての処理はデバイス上で完結し、共有するかどうかはあなた次第。</p>
+    </div>
+</section>
+
+<section class="screenshot container">
+    <img src="assets/madeleine.png" alt="Madeleine app screenshot">
+</section>
+
+<section class="container">
+    <div class="privacy">
+        <h2>あなたの写真は、あなたのもの。</h2>
+        <p>Madeleine は外部送信ゼロ・解析ゼロ・広告ゼロです。プロジェクトのメタデータだけが、あなた個人の iCloud に同期されます。</p>
+        <a href="privacy.html">プライバシーポリシーを読む →</a>
+    </div>
+</section>
+
+<footer>
+    <div class="links">
+        <a href="https://github.com/Shakshi3104/Madeleine">GitHub</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="https://github.com/Shakshi3104/Madeleine/issues">Support</a>
+    </div>
+    <p class="copyright">© 2026 Shakshi3104</p>
+</footer>
+
+</body>
+</html>
