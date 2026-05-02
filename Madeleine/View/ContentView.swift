@@ -202,6 +202,12 @@ struct VlogProjectRow: View {
     let project: VlogProject
     @State private var thumbnail: Image?
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy/MM/dd"
+        return f
+    }()
+
     private var firstClipCloudID: String? {
         project.clips?
             .sorted { $0.order < $1.order }
@@ -223,7 +229,7 @@ struct VlogProjectRow: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(project.updatedAt, style: .date)
+                    Text(Self.dateFormatter.string(from: project.updatedAt))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
