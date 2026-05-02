@@ -200,22 +200,86 @@ struct ContentView: View {
 
 struct VlogProjectRow: View {
     let project: VlogProject
+    @State private var thumbnail: Image?
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy/MM/dd"
+        return f
+    }()
+
+    private var firstClipCloudID: String? {
+        project.clips?
+            .sorted { $0.order < $1.order }
+            .first?
+            .sourceCloudID
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(project.title)
-                .font(.headline)
-            HStack {
-                Text("\(project.clips?.count ?? 0) clips")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(project.updatedAt, style: .date)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+        HStack(spacing: 12) {
+            thumbnailView
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(project.title)
+                    .font(.headline)
+                HStack {
+                    Text("\(project.clips?.count ?? 0) clips")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(Self.dateFormatter.string(from: project.updatedAt))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
         .padding(.vertical, 4)
+        .task(id: firstClipCloudID) {
+            await loadThumbnail()
+        }
+    }
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        if let thumbnail {
+            thumbnail
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            Rectangle()
+                .fill(.quaternary)
+                .overlay {
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+        }
+    }
+
+    private func loadThumbnail() async {
+        guard let cloudID = firstClipCloudID else { return }
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: [cloudID], options: nil)
+        guard let asset = assets.firstObject else { return }
+
+        let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.deliveryMode = .highQualityFormat
+
+        let image: UIImage? = await withCheckedContinuation { continuation in
+            PHImageManager.default().requestImage(
+                for: asset,
+                targetSize: CGSize(width: 168, height: 168),
+                contentMode: .aspectFill,
+                options: options
+            ) { image, _ in
+                continuation.resume(returning: image)
+            }
+        }
+
+        if let cgImage = image?.cgImage {
+            thumbnail = Image(decorative: cgImage, scale: 1.0)
+        }
     }
 }
 
