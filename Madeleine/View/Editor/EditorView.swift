@@ -223,7 +223,6 @@ private struct ProjectInfoSheet: View {
     let clipCount: Int
     let totalDuration: Double
     let orientation: VideoOrientation
-    @Environment(\.dismiss) private var dismiss
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -255,11 +254,6 @@ private struct ProjectInfoSheet: View {
             }
             .navigationTitle("Info")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
         }
         .presentationDetents([.medium, .large])
     }

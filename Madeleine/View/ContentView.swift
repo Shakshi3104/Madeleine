@@ -47,6 +47,7 @@ struct ContentView: View {
 
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
+    @State private var showAbout = false
 
     @Namespace private var glassNS
 
@@ -60,6 +61,16 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAbout = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("About")
+                }
+            }
             .navigationDestination(for: AppDestination.self) { destination in
                 switch destination {
                 case .extracting(let project):
@@ -78,6 +89,9 @@ struct ContentView: View {
                 newProjectButton
                     .padding()
             }
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutView()
         }
     }
 
