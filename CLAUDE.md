@@ -292,7 +292,7 @@ Madeleine/
 ### Workflow
 1. **New file → stop and ask the user first** (§8). Do not run `touch` or `Write` for new `.swift` files.
 2. **Temporary URLs are never persisted.** If you need a reference that survives app launches, use an asset identifier.
-3. **Documents in `docs/` use date-prefixed filenames** (e.g. `2026-04-19_color_compare.html`).
+3. **Design documents in `design/` use date-prefixed filenames** (e.g. `2026-04-19_color_compare.html`). The `docs/` directory is for the public site (GitHub Pages).
 
 ### CloudKit × SwiftData
 4. Every `@Model` property needs a default or must be Optional (§7.1).
