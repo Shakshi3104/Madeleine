@@ -16,6 +16,7 @@ struct EditorView: View {
     @State private var isEditingTitle = false
     @State private var editingTitle = ""
     @State private var isReordering = false
+    @State private var showInfo = false
     @State private var additionalPhotos: [PhotosPickerItem] = []
 
     @Namespace private var glassNS
@@ -46,8 +47,7 @@ struct EditorView: View {
                     editingTitle = viewModel.project.title
                     isEditingTitle = true
                 } label: {
-                    Text(viewModel.project.title)
-                        .font(.headline)
+                    titleLabel
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -70,6 +70,14 @@ struct EditorView: View {
             if let url = viewModel.exportedFileURL {
                 ShareSheet(url: url)
             }
+        }
+        .sheet(isPresented: $showInfo) {
+            ProjectInfoSheet(
+                project: viewModel.project,
+                clipCount: viewModel.sortedClips.count,
+                totalDuration: viewModel.sortedClips.reduce(0) { $0 + $1.trimDuration },
+                orientation: viewModel.orientation
+            )
         }
         .overlay {
             if viewModel.isGeneratingPreview || viewModel.isExporting || viewModel.isAddingClips {
@@ -107,6 +115,16 @@ struct EditorView: View {
         }
     }
 
+    // MARK: - Title
+
+    private var titleLabel: some View {
+        Text(viewModel.project.title)
+            .font(.headline)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(maxWidth: 220)
+    }
+
     // MARK: - Bottom Bar (Photos app style)
 
     private var bottomBar: some View {
@@ -126,8 +144,8 @@ struct EditorView: View {
 
             Spacer()
 
-            // 中央: プレビュー + 縦横切替（1つのガラスグループ）
-            HStack(spacing: 24) {
+            // 中央: プレビュー + 縦横切替 + インフォ（1つのガラスグループ）
+            HStack(spacing: 16) {
                 Button {
                     Task { await viewModel.generatePreview() }
                 } label: {
@@ -153,6 +171,15 @@ struct EditorView: View {
                         .frame(width: 56, height: 56)
                 }
                 .accessibilityLabel("Orientation")
+
+                Button {
+                    showInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.title2)
+                        .frame(width: 56, height: 56)
+                }
+                .accessibilityLabel("Info")
             }
             .padding(.horizontal, 6)
             .glassEffect()
@@ -186,6 +213,56 @@ struct EditorView: View {
         .padding(.horizontal)
         .padding(.bottom, 8)
         .tint(.primary)
+    }
+}
+
+// MARK: - Project Info Sheet
+
+private struct ProjectInfoSheet: View {
+    let project: VlogProject
+    let clipCount: Int
+    let totalDuration: Double
+    let orientation: VideoOrientation
+    @Environment(\.dismiss) private var dismiss
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    private var durationText: String {
+        String(format: "%.1f s", totalDuration)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Title")
+                            .foregroundStyle(.secondary)
+                        Text(project.title)
+                    }
+                    LabeledContent("Photos", value: "\(clipCount)")
+                    LabeledContent("Duration", value: durationText)
+                    LabeledContent("Orientation", value: orientation.displayName)
+                }
+                Section {
+                    LabeledContent("Created", value: Self.dateFormatter.string(from: project.createdAt))
+                    LabeledContent("Updated", value: Self.dateFormatter.string(from: project.updatedAt))
+                }
+            }
+            .navigationTitle("Info")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
