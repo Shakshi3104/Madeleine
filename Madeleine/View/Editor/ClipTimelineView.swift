@@ -14,20 +14,26 @@ struct ClipTimelineView: View {
     @Binding var isReordering: Bool
     let onMove: (IndexSet, Int) -> Void
     let onDelete: (VlogClip) -> Void
+    let onTap: (VlogClip) -> Void
 
     @State private var editMode: EditMode = .inactive
 
     var body: some View {
         List {
             ForEach(clips) { clip in
-                ClipRow(clip: clip, videoURL: extractedURLs[clip.id])
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            onDelete(clip)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                Button {
+                    onTap(clip)
+                } label: {
+                    ClipRow(clip: clip, videoURL: extractedURLs[clip.id])
+                }
+                .buttonStyle(.plain)
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        onDelete(clip)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
+                }
             }
             .onMove { source, destination in
                 onMove(source, destination)
