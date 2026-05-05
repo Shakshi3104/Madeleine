@@ -6,9 +6,5 @@
 	<string>Madeleine needs access to your photo library to read Live Photos for creating vlog videos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Madeleine needs access to save exported vlog videos to your Camera Roll.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 </dict>
 </plist>
