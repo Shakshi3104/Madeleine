@@ -20,11 +20,10 @@ This project follows the naming convention of Shakshi3104's other apps: a desser
 |---|---|
 | UI | SwiftUI with Liquid Glass |
 | State | `@Observable` macro (NOT `ObservableObject`) |
-| Persistence | SwiftData (CloudKit private sync planned, currently disabled) |
-| Media refs | `PHAsset.localIdentifier` (will migrate to `cloudIdentifier` when CloudKit is enabled) |
+| Persistence | SwiftData (single-device, no CloudKit sync) |
+| Media refs | `PHAsset.localIdentifier` |
 | Minimum iOS | **26.0** |
 | Bundle ID | `com.shakshi.Madeleine` |
-| CloudKit Container | `iCloud.com.shakshi.Madeleine` (not yet configured) |
 | Xcode | 26.0+ |
 | Swift | 6.1+ |
 | Accent Color | Golden Orange `#F5A623` |
@@ -35,17 +34,12 @@ This project follows the naming convention of Shakshi3104's other apps: a desser
 
 We do **not** duplicate photo or video data inside the app.
 
-- **Source Live Photos** live in the user's Photos library. They sync across devices via iCloud Photos.
+- **Source Live Photos** live in the user's Photos library.
 - **Exported videos** are shared via the system share sheet (not saved to Camera Roll automatically).
-- **SwiftData** holds only the *editing recipe*: project metadata, clip order, trim duration, and asset identifiers that point into the Photos library.
+- **SwiftData** holds only the *editing recipe*: project metadata, clip order, trim duration, and `PHAsset.localIdentifier` references that point into the Photos library.
+- **Single-device only.** CloudKit sync is intentionally not enabled — projects do not sync across devices. The `@Model` types still follow CloudKit constraints (§7) so this can be revisited later, and `Service/CloudIdentifierResolver.swift` exists for that eventual migration but is currently unused.
 
-### Current: `localIdentifier` / Future: `cloudIdentifier`
-
-Currently, `VlogClip.sourceCloudID` stores `PHAsset.localIdentifier` values. When CloudKit sync is enabled, these should be migrated to `cloudIdentifier` for cross-device support.
-
-Use `Service/CloudIdentifierResolver.swift` for conversions:
-- Save: `localIdentifier` → `cloudIdentifier` before writing to SwiftData
-- Load: `cloudIdentifier` → `PHAsset` before any Photos/AVFoundation work
+The property `VlogClip.sourceCloudID` stores a `PHAsset.localIdentifier` despite the name — the "Cloud" prefix is a holdover from the original CloudKit plan.
 
 ### Temporary files
 
@@ -154,7 +148,7 @@ Button { ... } label: { Image(systemName: "square.and.arrow.up").frame(width: 56
 
 ## 7. SwiftData + CloudKit Rules
 
-CloudKit backing imposes three constraints on `@Model` types. All three are mandatory.
+CloudKit sync is not currently enabled, but the `@Model` types follow the three CloudKit constraints below so the option remains open. Treat all three as mandatory when adding or modifying models.
 
 ### 7.1 Every property must have a default value or be Optional
 
@@ -249,7 +243,7 @@ Madeleine/
 - [x] Background Modes (Remote notifications) capability added
 - [x] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`
 - [x] Deployment Target set to iOS 26.0
-- [x] `MadeleineApp.swift` configured (CloudKit currently disabled)
+- [x] `MadeleineApp.swift` configured
 - [x] Template `Item.swift` and `ContentView.swift` replaced
 
 ### Phase 2 — Models
@@ -280,10 +274,9 @@ Madeleine/
 - [x] Date-based default project titles
 - [x] Orientation persistence per project
 - [x] ModelContainer crash recovery
-- [ ] App icon
-- [ ] Privacy policy
-- [ ] CloudKit container setup + cloudIdentifier migration
-- [ ] Real-device testing on iPad for iCloud sync
+- [x] App icon
+- [x] Privacy policy + About sheet
+- [x] Per-clip crop preview sheet
 
 ---
 
