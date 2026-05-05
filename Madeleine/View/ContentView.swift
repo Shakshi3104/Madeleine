@@ -43,7 +43,7 @@ enum AppDestination: Hashable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \VlogProject.updatedAt, order: .reverse) private var projects: [VlogProject]
+    @Query(sort: \VlogProject.createdAt, order: .reverse) private var projects: [VlogProject]
 
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
@@ -66,7 +66,7 @@ struct ContentView: View {
                     Button {
                         showAbout = true
                     } label: {
-                        Image(systemName: "info.circle")
+                        Image(systemName: "ellipsis.circle")
                     }
                     .accessibilityLabel("About")
                 }
@@ -243,7 +243,7 @@ struct VlogProjectRow: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(Self.dateFormatter.string(from: project.updatedAt))
+                    Text(Self.dateFormatter.string(from: project.createdAt))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }

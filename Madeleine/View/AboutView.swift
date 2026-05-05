@@ -36,6 +36,7 @@ struct AboutView: View {
                         Label("Support", systemImage: "questionmark.circle")
                     }
                 }
+                .tint(.primary)
 
                 Section {
                     VStack(spacing: 4) {
