@@ -85,7 +85,7 @@ struct EditorView: View {
             )
         }
         .sheet(item: $previewingClip) { clip in
-            ClipCropPreviewSheet(clip: clip, orientation: viewModel.orientation)
+            ClipCropPreviewSheet(clip: clip, initialOrientation: viewModel.orientation)
         }
         .overlay {
             if viewModel.isGeneratingPreview || viewModel.isExporting || viewModel.isAddingClips {
@@ -271,45 +271,59 @@ private struct ProjectInfoSheet: View {
 
 private struct ClipCropPreviewSheet: View {
     let clip: VlogClip
-    let orientation: VideoOrientation
 
+    @State private var orientation: VideoOrientation
     @State private var image: UIImage?
 
-    private var title: String {
-        clip.originalFilename.isEmpty ? "Clip \(clip.order + 1)" : clip.originalFilename
+    init(clip: VlogClip, initialOrientation: VideoOrientation) {
+        self.clip = clip
+        _orientation = State(initialValue: initialOrientation)
     }
 
     var body: some View {
-        NavigationStack {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
             GeometryReader { proxy in
-                ZStack {
-                    Color.black
-                    if let image {
-                        cropOverlay(image: image, in: proxy.size)
-                    } else {
-                        ProgressView()
-                            .controlSize(.large)
-                            .tint(.white)
-                    }
-                }
-                .frame(width: proxy.size.width, height: proxy.size.height)
-            }
-            .ignoresSafeArea(edges: .bottom)
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Label(orientation.displayName, systemImage: orientation.systemImage)
-                        .labelStyle(.titleAndIcon)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                if let image {
+                    cropOverlay(image: image, in: proxy.size)
+                } else {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .task {
-                await loadImage()
+
+            VStack {
+                orientationToggle
+                    .padding(.top, 12)
+                Spacer()
             }
         }
         .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .task {
+            await loadImage()
+        }
+    }
+
+    private var orientationToggle: some View {
+        HStack(spacing: 8) {
+            ForEach(VideoOrientation.allCases, id: \.self) { option in
+                Button {
+                    orientation = option
+                } label: {
+                    Image(systemName: option.systemImage)
+                        .font(.title3)
+                        .frame(width: 56, height: 44)
+                        .foregroundStyle(orientation == option ? Color.accentColor : .primary)
+                }
+                .accessibilityLabel(option.displayName)
+            }
+        }
+        .padding(.horizontal, 6)
+        .glassEffect()
     }
 
     @ViewBuilder
