@@ -239,8 +239,7 @@ Madeleine/
 ## 11. Implementation Status
 
 ### Phase 1 — Foundation
-- [x] Xcode project created with SwiftData + Host in CloudKit
-- [x] Background Modes (Remote notifications) capability added
+- [x] Xcode project bootstrapped with SwiftData (CloudKit + Remote Notifications capabilities were enabled at creation but later removed in Phase 5; see Data Strategy §3)
 - [x] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`
 - [x] Deployment Target set to iOS 26.0
 - [x] `MadeleineApp.swift` configured
@@ -277,6 +276,8 @@ Madeleine/
 - [x] App icon
 - [x] Privacy policy + About sheet
 - [x] Per-clip crop preview sheet
+- [x] `PrivacyInfo.xcprivacy` (no tracking, no data collection, no Required Reason API access)
+- [x] Removed unused CloudKit + Remote Notifications capabilities ahead of App Store submission
 
 ---
 
