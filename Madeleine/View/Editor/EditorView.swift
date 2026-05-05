@@ -17,6 +17,7 @@ struct EditorView: View {
     @State private var editingTitle = ""
     @State private var isReordering = false
     @State private var showInfo = false
+    @State private var previewingClip: VlogClip?
     @State private var additionalPhotos: [PhotosPickerItem] = []
 
     @Namespace private var glassNS
@@ -38,6 +39,10 @@ struct EditorView: View {
             },
             onDelete: { clip in
                 viewModel.deleteClip(clip, modelContext: modelContext)
+            },
+            onTap: { clip in
+                guard !isReordering else { return }
+                previewingClip = clip
             }
         )
         .navigationBarTitleDisplayMode(.inline)
@@ -78,6 +83,9 @@ struct EditorView: View {
                 totalDuration: viewModel.sortedClips.reduce(0) { $0 + $1.trimDuration },
                 orientation: viewModel.orientation
             )
+        }
+        .sheet(item: $previewingClip) { clip in
+            ClipCropPreviewSheet(clip: clip, orientation: viewModel.orientation)
         }
         .overlay {
             if viewModel.isGeneratingPreview || viewModel.isExporting || viewModel.isAddingClips {
@@ -256,6 +264,133 @@ private struct ProjectInfoSheet: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+// MARK: - Clip Crop Preview Sheet
+
+private struct ClipCropPreviewSheet: View {
+    let clip: VlogClip
+    let orientation: VideoOrientation
+
+    @State private var image: UIImage?
+
+    private var title: String {
+        clip.originalFilename.isEmpty ? "Clip \(clip.order + 1)" : clip.originalFilename
+    }
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { proxy in
+                ZStack {
+                    Color.black
+                    if let image {
+                        cropOverlay(image: image, in: proxy.size)
+                    } else {
+                        ProgressView()
+                            .controlSize(.large)
+                            .tint(.white)
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+            }
+            .ignoresSafeArea(edges: .bottom)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Label(orientation.displayName, systemImage: orientation.systemImage)
+                        .labelStyle(.titleAndIcon)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .task {
+                await loadImage()
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    @ViewBuilder
+    private func cropOverlay(image: UIImage, in container: CGSize) -> some View {
+        let imageAspect = image.size.width / max(image.size.height, 1)
+        let containerAspect = container.width / max(container.height, 1)
+
+        // Image displayed via aspect-fit
+        let displaySize: CGSize = {
+            if imageAspect > containerAspect {
+                return CGSize(width: container.width, height: container.width / imageAspect)
+            } else {
+                return CGSize(width: container.height * imageAspect, height: container.height)
+            }
+        }()
+
+        let outputAspect = orientation.renderSize.width / orientation.renderSize.height
+
+        // Crop region within the displayed image (aspect-fill of output → visible region in source)
+        let cropSize: CGSize = {
+            if imageAspect > outputAspect {
+                return CGSize(width: displaySize.height * outputAspect, height: displaySize.height)
+            } else {
+                return CGSize(width: displaySize.width, height: displaySize.width / outputAspect)
+            }
+        }()
+
+        let center = CGPoint(x: container.width / 2, y: container.height / 2)
+        let cropRect = CGRect(
+            x: center.x - cropSize.width / 2,
+            y: center.y - cropSize.height / 2,
+            width: cropSize.width,
+            height: cropSize.height
+        )
+
+        ZStack {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: displaySize.width, height: displaySize.height)
+                .position(center)
+
+            Canvas { ctx, size in
+                var path = Path()
+                path.addRect(CGRect(origin: .zero, size: size))
+                path.addRect(cropRect)
+                ctx.fill(path, with: .color(.black.opacity(0.55)), style: FillStyle(eoFill: true))
+            }
+            .allowsHitTesting(false)
+
+            Rectangle()
+                .strokeBorder(Color.white, lineWidth: 2)
+                .frame(width: cropSize.width, height: cropSize.height)
+                .position(x: cropRect.midX, y: cropRect.midY)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private func loadImage() async {
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: [clip.sourceCloudID], options: nil)
+        guard let asset = assets.firstObject else { return }
+
+        let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.deliveryMode = .highQualityFormat
+        options.resizeMode = .exact
+
+        let target = CGSize(width: 1500, height: 1500)
+        let loaded: UIImage? = await withCheckedContinuation { continuation in
+            PHImageManager.default().requestImage(
+                for: asset,
+                targetSize: target,
+                contentMode: .aspectFit,
+                options: options
+            ) { result, _ in
+                continuation.resume(returning: result)
+            }
+        }
+        if let loaded {
+            image = loaded
+        }
     }
 }
 
