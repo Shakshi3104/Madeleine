@@ -26,3 +26,9 @@ Packages/
 
 # Skills
 skills-lock.json
+
+# App Store Connect CLI
+.env
+.asc/config.json
+.asc/artifacts/
+.asc/runs/
