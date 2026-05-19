@@ -29,6 +29,21 @@ cp .env.example .env
 
 `.env` は `.gitignore` 済みなのでコミットされません。
 
+### 4. App Store Connect の Test Information を GUI で埋める(External 配信する場合のみ)
+
+External Testing で Beta App Review に提出するには、**ビルドとは別にアプリ単位のメタデータ**を事前に登録しておく必要があります。これは `asc` のスコープ外(現状の asc には対応コマンドがない)で、初回だけ GUI 操作が必要です。
+
+App Store Connect → Madeleine → TestFlight → **テスト情報** で以下を保存:
+
+- **ベータ版アプリの説明 (Beta App Description)** — アプリ全体の説明。バージョンを跨いで使い回されます
+- **フィードバックメールアドレス** — `shakshi3104.support@icloud.com`
+
+埋めずに `testflight_external` を実行すると、最後の publish ステップで `Beta App Description is required to submit a build for external testing.` で落ちます(その時点で IPA のアップロードと Beta Group への attach までは完了している状態)。
+
+> **What to Test(テスト内容)はビルド単位**
+>
+> ベータ版アプリの説明と違い、What to Test はビルドごとに最低 1 ロケール必須。デフォルトでは GUI で手入力しますが、ワークフローから自動入力したい場合は `.asc/workflow.json` の `publish` ステップに `--test-notes "..." --locale en-US` を追加することで API 経由で書けます。
+
 ---
 
 ## リリース手順
@@ -86,6 +101,18 @@ Beta App Review は **Marketing Version ごとに 1 回**通れば、同 Version
 ### `Error: --group is required`
 
 `asc publish testflight` には Beta Group が必須。Internal Testing の場合は `asc builds upload`(workflow 内では `testflight_internal` ステップ)を使う。
+
+### `Beta App Description is required to submit a build for external testing.`
+
+App Store Connect 側のアプリ単位メタデータ(ベータ版アプリの説明 / フィードバックメールアドレス)が未入力。セットアップ §4 を参照して GUI で 1 度だけ埋める。
+
+このエラー時点で IPA のアップロードと Beta Group への attach は成功しているので、GUI 入力後に新規ビルドを作り直す必要はなく、エラー出力に表示される resume コマンドで publish ステップだけリトライできる:
+
+```bash
+asc workflow run --file '.asc/workflow.json' 'testflight_external' --resume '<run-id>'
+```
+
+`<run-id>` は `.asc/runs/` 配下の最新ファイル名から取れる(`testflight_external-YYYYMMDDTHHMMSSZ-xxxxxxxx`)。
 
 ### `Error Opening Destination: [Operation not permitted]`
 
