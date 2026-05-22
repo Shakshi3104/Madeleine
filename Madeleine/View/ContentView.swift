@@ -242,6 +242,7 @@ struct ContentView: View {
 struct VlogProjectRow: View {
     let project: VlogProject
     @State private var thumbnail: Image?
+    @Environment(\.scenePhase) private var scenePhase
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -280,6 +281,11 @@ struct VlogProjectRow: View {
         .task(id: firstClipCloudID) {
             await loadThumbnail()
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task { await loadThumbnail() }
+            }
+        }
     }
 
     @ViewBuilder
@@ -299,9 +305,15 @@ struct VlogProjectRow: View {
     }
 
     private func loadThumbnail() async {
-        guard let cloudID = firstClipCloudID else { return }
+        guard let cloudID = firstClipCloudID else {
+            thumbnail = nil
+            return
+        }
         let assets = PHAsset.fetchAssets(withLocalIdentifiers: [cloudID], options: nil)
-        guard let asset = assets.firstObject else { return }
+        guard let asset = assets.firstObject else {
+            thumbnail = nil
+            return
+        }
 
         let options = PHImageRequestOptions()
         options.isNetworkAccessAllowed = true
