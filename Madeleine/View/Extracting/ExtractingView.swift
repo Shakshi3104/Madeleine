@@ -11,45 +11,30 @@ import Photos
 
 struct ExtractingView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
     let project: VlogProject
     let onComplete: ([UUID: URL]) -> Void
 
     @State private var viewModel = ExtractingViewModel()
 
-    private var isError: Bool {
-        viewModel.isComplete && viewModel.extractedURLs.isEmpty
-    }
-
     var body: some View {
-        Group {
-            if isError {
-                ContentUnavailableView(
-                    "No Live Photos Found",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text("None of the selected photos could be extracted.")
-                )
-            } else {
-                VStack(spacing: 24) {
-                    Spacer()
-                    ProgressView(value: viewModel.progress) {
-                        Text("Extracting Live Photos…")
-                            .font(.headline)
-                    } currentValueLabel: {
-                        Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 40)
-
-                    if viewModel.skippedCount > 0 {
-                        Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
-                    Spacer()
-                }
+        VStack(spacing: 24) {
+            Spacer()
+            ProgressView(value: viewModel.progress) {
+                Text("Extracting Live Photos…")
+                    .font(.headline)
+            } currentValueLabel: {
+                Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 40)
+
+            if viewModel.skippedCount > 0 {
+                Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+            Spacer()
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
@@ -58,24 +43,10 @@ struct ExtractingView: View {
                 Text(project.title)
                     .font(.headline)
             }
-            if isError {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                    }
-                }
-            }
         }
         .task {
             await viewModel.extract(project: project, modelContext: modelContext)
-            if !viewModel.extractedURLs.isEmpty {
-                onComplete(viewModel.extractedURLs)
-            }
+            onComplete(viewModel.extractedURLs)
         }
     }
 }
