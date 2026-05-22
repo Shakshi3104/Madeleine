@@ -48,6 +48,9 @@ struct ContentView: View {
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
     @State private var showAbout = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showAlert = false
 
     @Namespace private var glassNS
 
@@ -93,6 +96,11 @@ struct ContentView: View {
         .sheet(isPresented: $showAbout) {
             AboutView()
         }
+        .task {
+            if PHPhotoLibrary.authorizationStatus(for: .readWrite) == .notDetermined {
+                await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+            }
+        }
     }
 
     // MARK: - Empty State
@@ -111,7 +119,16 @@ struct ContentView: View {
         List {
             ForEach(projects) { project in
                 Button {
-                    navigationPath.append(AppDestination.extracting(project))
+                    let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                    if status == .denied || status == .restricted {
+                        alertTitle = "Photos Access Required"
+                        alertMessage = "Please allow Madeleine to access your Photos in Settings."
+                        showAlert = true
+                    } else if (project.clips ?? []).isEmpty {
+                        navigationPath.append(AppDestination.editor(project, [:]))
+                    } else {
+                        navigationPath.append(AppDestination.extracting(project))
+                    }
                 } label: {
                     VlogProjectRow(project: project)
                 }
@@ -146,7 +163,25 @@ struct ContentView: View {
             guard !newItems.isEmpty else { return }
             let project = createProject(from: newItems)
             selectedPhotos = []
+            guard !(project.clips ?? []).isEmpty else {
+                modelContext.delete(project)
+                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                if status == .denied || status == .restricted {
+                    alertTitle = "Photos Access Required"
+                    alertMessage = "Please allow Madeleine to access your Photos in Settings."
+                } else {
+                    alertTitle = "Couldn't Create Vlog"
+                    alertMessage = "No Live Photos were selected. Please select Live Photos to create a vlog."
+                }
+                showAlert = true
+                return
+            }
             navigationPath.append(AppDestination.extracting(project))
+        }
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertMessage)
         }
     }
 
@@ -171,15 +206,9 @@ struct ContentView: View {
         for item in items {
             guard let localID = item.itemIdentifier else { continue }
             let assets = PHAsset.fetchAssets(withLocalIdentifiers: [localID], options: nil)
-            let filename: String
-            let captureDate: Date?
-            if let asset = assets.firstObject {
-                filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
-                captureDate = asset.creationDate
-            } else {
-                filename = ""
-                captureDate = nil
-            }
+            guard let asset = assets.firstObject else { continue }
+            let filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
+            let captureDate = asset.creationDate
             clipInfos.append(ClipInfo(localID: localID, filename: filename, captureDate: captureDate))
         }
 
@@ -215,6 +244,7 @@ struct ContentView: View {
 struct VlogProjectRow: View {
     let project: VlogProject
     @State private var thumbnail: Image?
+    @Environment(\.scenePhase) private var scenePhase
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -253,6 +283,11 @@ struct VlogProjectRow: View {
         .task(id: firstClipCloudID) {
             await loadThumbnail()
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task { await loadThumbnail() }
+            }
+        }
     }
 
     @ViewBuilder
@@ -272,9 +307,15 @@ struct VlogProjectRow: View {
     }
 
     private func loadThumbnail() async {
-        guard let cloudID = firstClipCloudID else { return }
+        guard let cloudID = firstClipCloudID else {
+            thumbnail = nil
+            return
+        }
         let assets = PHAsset.fetchAssets(withLocalIdentifiers: [cloudID], options: nil)
-        guard let asset = assets.firstObject else { return }
+        guard let asset = assets.firstObject else {
+            thumbnail = nil
+            return
+        }
 
         let options = PHImageRequestOptions()
         options.isNetworkAccessAllowed = true

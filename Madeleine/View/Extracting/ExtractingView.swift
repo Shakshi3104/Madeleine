@@ -7,10 +7,10 @@
 
 import SwiftUI
 import SwiftData
+import Photos
 
 struct ExtractingView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
     let project: VlogProject
     let onComplete: ([UUID: URL]) -> Void
 
@@ -19,49 +19,34 @@ struct ExtractingView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-
-            if viewModel.isComplete && viewModel.extractedURLs.isEmpty {
-                // 全件失敗
-                Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.orange)
-
-                Text("No Live Photos could be extracted.")
+            ProgressView(value: viewModel.progress) {
+                Text("Extracting Live Photos…")
                     .font(.headline)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-
-                Button("Go Back") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-            } else {
-                ProgressView(value: viewModel.progress) {
-                    Text("Extracting Live Photos…")
-                        .font(.headline)
-                } currentValueLabel: {
-                    Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 40)
-
-                if viewModel.skippedCount > 0 {
-                    Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
+            } currentValueLabel: {
+                Text("\(viewModel.completedCount) / \(viewModel.totalCount)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 40)
 
+            if viewModel.skippedCount > 0 {
+                Text("\(viewModel.skippedCount) non-Live Photo(s) skipped")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
             Spacer()
         }
-        .navigationTitle("Extracting")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(project.title)
+                    .font(.headline)
+            }
+        }
         .task {
             await viewModel.extract(project: project, modelContext: modelContext)
-            if !viewModel.extractedURLs.isEmpty {
-                onComplete(viewModel.extractedURLs)
-            }
+            onComplete(viewModel.extractedURLs)
         }
     }
 }
@@ -85,6 +70,13 @@ final class ExtractingViewModel {
         let clips = (project.clips ?? []).sorted { $0.order < $1.order }
         totalCount = clips.count
         guard totalCount > 0 else {
+            isComplete = true
+            return
+        }
+
+        // 権限がない場合はクリップを削除せずにエラー状態にする
+        let authStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard authStatus == .authorized || authStatus == .limited else {
             isComplete = true
             return
         }

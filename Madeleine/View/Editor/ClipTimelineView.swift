@@ -19,6 +19,13 @@ struct ClipTimelineView: View {
     @State private var editMode: EditMode = .inactive
 
     var body: some View {
+        if clips.isEmpty {
+            ContentUnavailableView(
+                "No Clips",
+                systemImage: "livephoto.slash",
+                description: Text("Tap + to add Live Photos.")
+            )
+        } else {
         List {
             ForEach(clips) { clip in
                 Button {
@@ -53,6 +60,7 @@ struct ClipTimelineView: View {
             if newValue == .inactive {
                 isReordering = false
             }
+        }
         }
     }
 }
