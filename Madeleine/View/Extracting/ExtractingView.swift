@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Photos
 
 struct ExtractingView: View {
     @Environment(\.modelContext) private var modelContext
@@ -85,6 +86,13 @@ final class ExtractingViewModel {
         let clips = (project.clips ?? []).sorted { $0.order < $1.order }
         totalCount = clips.count
         guard totalCount > 0 else {
+            isComplete = true
+            return
+        }
+
+        // 権限がない場合はクリップを削除せずにエラー状態にする
+        let authStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard authStatus == .authorized || authStatus == .limited else {
             isComplete = true
             return
         }

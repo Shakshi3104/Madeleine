@@ -118,7 +118,13 @@ struct ContentView: View {
         List {
             ForEach(projects) { project in
                 Button {
-                    navigationPath.append(AppDestination.extracting(project))
+                    let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                    if status == .denied || status == .restricted {
+                        noClipsAlertMessage = "Please allow Madeleine to access your Photos in Settings."
+                        showNoClipsAlert = true
+                    } else {
+                        navigationPath.append(AppDestination.extracting(project))
+                    }
                 } label: {
                     VlogProjectRow(project: project)
                 }
