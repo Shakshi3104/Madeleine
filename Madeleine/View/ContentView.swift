@@ -48,6 +48,8 @@ struct ContentView: View {
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
     @State private var showAbout = false
+    @State private var noClipsAlertMessage = ""
+    @State private var showNoClipsAlert = false
 
     @Namespace private var glassNS
 
@@ -146,7 +148,23 @@ struct ContentView: View {
             guard !newItems.isEmpty else { return }
             let project = createProject(from: newItems)
             selectedPhotos = []
+            guard !(project.clips ?? []).isEmpty else {
+                modelContext.delete(project)
+                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                if status == .denied || status == .restricted {
+                    noClipsAlertMessage = "Please allow Madeleine to access your Photos in Settings."
+                } else {
+                    noClipsAlertMessage = "No Live Photos were selected. Please select Live Photos to create a vlog."
+                }
+                showNoClipsAlert = true
+                return
+            }
             navigationPath.append(AppDestination.extracting(project))
+        }
+        .alert("Couldn't Create Vlog", isPresented: $showNoClipsAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(noClipsAlertMessage)
         }
     }
 
