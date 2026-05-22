@@ -119,11 +119,16 @@ final class EditorViewModel {
                 videoComposition: result.1
             )
             // 共有用に適切なファイル名をつける
+            // タイトルに含まれるパスセパレータ等を除去（例: "Vlog 2026/05/22" → "vlog-2026-05-22"）
+            let invalidFilenameChars = CharacterSet(charactersIn: "/\\:?\"<>|*")
             let sanitizedTitle = project.title
                 .lowercased()
                 .replacingOccurrences(of: " ", with: "-")
+                .components(separatedBy: invalidFilenameChars)
+                .joined(separator: "-")
+            let filename = sanitizedTitle.isEmpty ? "vlog.mov" : "\(sanitizedTitle).mov"
             let namedURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("\(sanitizedTitle).mov")
+                .appendingPathComponent(filename)
             try? FileManager.default.removeItem(at: namedURL)
             try FileManager.default.copyItem(at: tempURL, to: namedURL)
             exportedFileURL = namedURL
