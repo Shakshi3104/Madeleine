@@ -48,8 +48,9 @@ struct ContentView: View {
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var navigationPath = NavigationPath()
     @State private var showAbout = false
-    @State private var noClipsAlertMessage = ""
-    @State private var showNoClipsAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showAlert = false
 
     @Namespace private var glassNS
 
@@ -120,8 +121,9 @@ struct ContentView: View {
                 Button {
                     let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                     if status == .denied || status == .restricted {
-                        noClipsAlertMessage = "Please allow Madeleine to access your Photos in Settings."
-                        showNoClipsAlert = true
+                        alertTitle = "Photos Access Required"
+                        alertMessage = "Please allow Madeleine to access your Photos in Settings."
+                        showAlert = true
                     } else {
                         navigationPath.append(AppDestination.extracting(project))
                     }
@@ -163,19 +165,21 @@ struct ContentView: View {
                 modelContext.delete(project)
                 let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                 if status == .denied || status == .restricted {
-                    noClipsAlertMessage = "Please allow Madeleine to access your Photos in Settings."
+                    alertTitle = "Photos Access Required"
+                    alertMessage = "Please allow Madeleine to access your Photos in Settings."
                 } else {
-                    noClipsAlertMessage = "No Live Photos were selected. Please select Live Photos to create a vlog."
+                    alertTitle = "Couldn't Create Vlog"
+                    alertMessage = "No Live Photos were selected. Please select Live Photos to create a vlog."
                 }
-                showNoClipsAlert = true
+                showAlert = true
                 return
             }
             navigationPath.append(AppDestination.extracting(project))
         }
-        .alert("Couldn't Create Vlog", isPresented: $showNoClipsAlert) {
+        .alert(alertTitle, isPresented: $showAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(noClipsAlertMessage)
+            Text(alertMessage)
         }
     }
 
