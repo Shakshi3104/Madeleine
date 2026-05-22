@@ -124,6 +124,8 @@ struct ContentView: View {
                         alertTitle = "Photos Access Required"
                         alertMessage = "Please allow Madeleine to access your Photos in Settings."
                         showAlert = true
+                    } else if (project.clips ?? []).isEmpty {
+                        navigationPath.append(AppDestination.editor(project, [:]))
                     } else {
                         navigationPath.append(AppDestination.extracting(project))
                     }
