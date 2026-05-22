@@ -95,6 +95,11 @@ struct ContentView: View {
         .sheet(isPresented: $showAbout) {
             AboutView()
         }
+        .task {
+            if PHPhotoLibrary.authorizationStatus(for: .readWrite) == .notDetermined {
+                await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+            }
+        }
     }
 
     // MARK: - Empty State
@@ -189,15 +194,9 @@ struct ContentView: View {
         for item in items {
             guard let localID = item.itemIdentifier else { continue }
             let assets = PHAsset.fetchAssets(withLocalIdentifiers: [localID], options: nil)
-            let filename: String
-            let captureDate: Date?
-            if let asset = assets.firstObject {
-                filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
-                captureDate = asset.creationDate
-            } else {
-                filename = ""
-                captureDate = nil
-            }
+            guard let asset = assets.firstObject else { continue }
+            let filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
+            let captureDate = asset.creationDate
             clipInfos.append(ClipInfo(localID: localID, filename: filename, captureDate: captureDate))
         }
 
