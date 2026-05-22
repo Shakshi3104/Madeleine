@@ -51,9 +51,13 @@ struct ExtractingView: View {
                 }
             }
         }
-        .navigationTitle("Extracting")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(project.title)
+                    .font(.headline)
+            }
             if isError {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
