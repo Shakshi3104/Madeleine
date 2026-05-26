@@ -65,7 +65,20 @@ actor AutoCurator {
         }
     }
 
+    func count(from: Date, to: Date) -> Int {
+        PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(from: from, to: to)).count
+    }
+
     private func fetchLivePhotos(from: Date, to: Date) -> [PHAsset] {
+        let result = PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(from: from, to: to))
+        var assets: [PHAsset] = []
+        result.enumerateObjects { asset, _, _ in
+            assets.append(asset)
+        }
+        return assets
+    }
+
+    private static func fetchOptions(from: Date, to: Date) -> PHFetchOptions {
         let options = PHFetchOptions()
         options.predicate = NSPredicate(
             format: "(mediaSubtypes & %d) != 0 AND creationDate >= %@ AND creationDate <= %@",
@@ -74,13 +87,7 @@ actor AutoCurator {
             to as NSDate
         )
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
-
-        let result = PHAsset.fetchAssets(with: .image, options: options)
-        var assets: [PHAsset] = []
-        result.enumerateObjects { asset, _, _ in
-            assets.append(asset)
-        }
-        return assets
+        return options
     }
 
     private func scoreAll(
