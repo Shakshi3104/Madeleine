@@ -77,7 +77,7 @@ struct AutoSelectingView: View {
                 .symbolEffect(.pulse, options: .repeating)
 
             VStack(spacing: 20) {
-                Text("旅行から最高の瞬間を選んでいます")
+                Text("Finding the best moments from your trip")
                     .font(.title3)
                     .fontWeight(.medium)
                     .multilineTextAlignment(.center)
@@ -100,7 +100,7 @@ struct AutoSelectingView: View {
             Button {
                 viewModel.cancel()
             } label: {
-                Text("キャンセル")
+                Text("Cancel")
                     .frame(width: 200, height: 50)
                     .fontWeight(.medium)
             }
@@ -126,10 +126,10 @@ struct AutoSelectingView: View {
 
     private func stageTitle(for stage: AutoCurator.Stage) -> String {
         switch stage {
-        case .fetching: "Live Photo を集めています"
-        case .clustering: "シーンを分けています"
-        case .scoring: "クリップの品質を評価しています"
-        case .selecting: "良いカットを選んでいます"
+        case .fetching: "Gathering Live Photos…"
+        case .clustering: "Grouping by scene…"
+        case .scoring: "Scoring clip quality…"
+        case .selecting: "Picking the best cuts…"
         }
     }
 }

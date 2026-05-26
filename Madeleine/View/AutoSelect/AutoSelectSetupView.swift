@@ -47,15 +47,15 @@ struct AutoSelectSetupView: View {
 
     var body: some View {
         Form {
-            Section("期間") {
+            Section("Date Range") {
                 DatePicker(
-                    "開始",
+                    "From",
                     selection: $viewModel.fromDate,
                     in: ...viewModel.toDate,
                     displayedComponents: .date
                 )
                 DatePicker(
-                    "終了",
+                    "To",
                     selection: $viewModel.toDate,
                     in: viewModel.fromDate...,
                     displayedComponents: .date
@@ -63,12 +63,12 @@ struct AutoSelectSetupView: View {
                 candidateCountLabel
             }
 
-            Section("枚数") {
+            Section("Count") {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("目標枚数")
+                        Text("Target")
                         Spacer()
-                        Text("\(viewModel.targetCount) 枚")
+                        Text("\(viewModel.targetCount) photos")
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
@@ -87,7 +87,7 @@ struct AutoSelectSetupView: View {
                 Button {
                     onStart(viewModel.fromDate, viewModel.toDate, viewModel.targetCount)
                 } label: {
-                    Text("セレクト開始")
+                    Text("Start Auto Select")
                         .frame(maxWidth: .infinity)
                         .fontWeight(.semibold)
                 }
@@ -96,7 +96,7 @@ struct AutoSelectSetupView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .navigationTitle("自動セレクト")
+        .navigationTitle("Auto Select")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: viewModel.fromDate) { _, _ in viewModel.refreshCount() }
         .onChange(of: viewModel.toDate) { _, _ in viewModel.refreshCount() }
@@ -106,12 +106,12 @@ struct AutoSelectSetupView: View {
     @ViewBuilder
     private var candidateCountLabel: some View {
         HStack {
-            Text("対象の Live Photo")
+            Text("Matching Live Photos")
             Spacer()
             if viewModel.isCounting {
                 ProgressView()
             } else if let count = viewModel.candidateCount {
-                Text("\(count) 枚")
+                Text("\(count) photos")
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
             }

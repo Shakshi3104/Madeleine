@@ -137,7 +137,7 @@ struct ContentView: View {
             }
         }
         .alert(
-            "自動セレクトに失敗しました",
+            "Auto Select Failed",
             isPresented: Binding(
                 get: { autoSelectErrorMessage != nil },
                 set: { if !$0 { autoSelectErrorMessage = nil } }
@@ -193,12 +193,12 @@ struct ContentView: View {
                 Button {
                     navigationPath.append(AppDestination.autoSelectSetup)
                 } label: {
-                    Label("旅行から自動で選ぶ", systemImage: "sparkles")
+                    Label("Pick photos from a trip", systemImage: "sparkles")
                 }
                 Button {
                     isShowingPhotosPicker = true
                 } label: {
-                    Label("写真を選んで作る", systemImage: "plus")
+                    Label("Pick photos manually", systemImage: "plus")
                 }
             } label: {
                 Image(systemName: "plus")
@@ -362,9 +362,9 @@ struct ContentView: View {
         if let curationError = error as? AutoCurator.CurationError {
             switch curationError {
             case .noAssetsFound:
-                return "指定した期間に Live Photo が見つかりませんでした。期間を広げてもう一度お試しください。"
+                return "No Live Photos found in this date range. Try widening the range and tap again."
             case .noResults:
-                return "選定できるクリップが見つかりませんでした。"
+                return "Couldn't find suitable clips to use."
             }
         }
         return error.localizedDescription
