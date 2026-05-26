@@ -389,7 +389,23 @@ iCloud 写真がオンデバイスにない場合はネットワーク経由の�
 
 ---
 
-## 13. 参考リンク
+## 13. v1.1+ の拡張案
+
+v1 (この計画書の対象) には含めないが、UX 上欲しいと議論された後続候補。
+
+### 13.1 既存プロジェクト内での自動セレクト/追加
+
+`EditorView` から「このプロジェクトに自動でクリップを追加」できる導線。ユーザーが既に手動でいくつか入れた後、それらと雰囲気の合うクリップを `AutoCurator` で何枚か継ぎ足す、あるいは保存済みの `autoSelectFromDate`/`autoSelectToDate` を使って再選定する。手動ピックと自動セレクトの **混在 / 補完** を成立させる。
+
+考えどころ:
+
+- 既存クリップの `featurePrint` を「アンカー」として使い、似た傾向のものを優先するか、純粋な美的スコアに任せるか
+- 既存クリップとの重複排除を AutoCurator 側で受け取れるよう、`curate` に「除外する `sourceCloudID` 集合」を渡せる引数を追加する設計
+- UI 上の見せ方 (Editor のツールバーに ✨ ボタン / 別シート)
+
+---
+
+## 14. 参考リンク
 
 - [CalculateImageAestheticsScoresRequest — Apple Developer Documentation](https://developer.apple.com/documentation/vision/calculateimageaestheticsscoresrequest)
 - [Discover Swift enhancements in the Vision framework — WWDC24 Session 10163](https://developer.apple.com/videos/play/wwdc2024/10163/)
