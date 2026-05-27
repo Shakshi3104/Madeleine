@@ -6,16 +6,27 @@
 //
 
 import SwiftUI
+import Photos
+import UIKit
 
 @Observable
 @MainActor
 final class AutoSelectSetupViewModel {
+    enum Permission {
+        case unknown
+        case authorized
+        case needsRequest
+        case needsSettings
+    }
+
     var fromDate: Date
     var toDate: Date
     var targetCount: Int = 30
 
     var candidateCount: Int?
     var isCounting: Bool = false
+
+    var permission: Permission = .unknown
 
     private let curator = AutoCurator()
     private var countTask: Task<Void, Never>?
@@ -27,7 +38,28 @@ final class AutoSelectSetupViewModel {
         self.fromDate = cal.date(byAdding: .day, value: -7, to: now) ?? now
     }
 
+    func checkPermission() {
+        permission = Self.classify(PHPhotoLibrary.authorizationStatus(for: .readWrite))
+    }
+
+    func requestPermission() async {
+        let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        permission = Self.classify(status)
+        if permission == .authorized {
+            refreshCount()
+        }
+    }
+
+    private static func classify(_ status: PHAuthorizationStatus) -> Permission {
+        switch status {
+        case .authorized: .authorized
+        case .notDetermined: .needsRequest
+        default: .needsSettings
+        }
+    }
+
     func refreshCount() {
+        guard permission == .authorized else { return }
         countTask?.cancel()
         isCounting = true
         let from = fromDate
@@ -46,6 +78,28 @@ struct AutoSelectSetupView: View {
     let onStart: (Date, Date, Int) -> Void
 
     var body: some View {
+        Group {
+            switch viewModel.permission {
+            case .unknown:
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .authorized:
+                form
+            case .needsRequest, .needsSettings:
+                permissionPrompt
+            }
+        }
+        .navigationTitle("Auto Select")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            viewModel.checkPermission()
+            if viewModel.permission == .authorized {
+                viewModel.refreshCount()
+            }
+        }
+    }
+
+    private var form: some View {
         Form {
             Section("Date Range") {
                 DatePicker(
@@ -96,11 +150,25 @@ struct AutoSelectSetupView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .navigationTitle("Auto Select")
-        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: viewModel.fromDate) { _, _ in viewModel.refreshCount() }
         .onChange(of: viewModel.toDate) { _, _ in viewModel.refreshCount() }
-        .task { viewModel.refreshCount() }
+    }
+
+    private var permissionPrompt: some View {
+        ContentUnavailableView {
+            Label("Photo Library Access Needed", systemImage: "lock.shield")
+        } description: {
+            Text("Auto Select needs access to your full photo library so it can find Live Photos taken in the selected date range.")
+        } actions: {
+            Button {
+                handlePermissionAction()
+            } label: {
+                Text(viewModel.permission == .needsRequest ? "Allow Access" : "Open Settings")
+                    .frame(minWidth: 160)
+                    .fontWeight(.semibold)
+            }
+            .buttonStyle(.borderedProminent)
+        }
     }
 
     @ViewBuilder
@@ -115,6 +183,19 @@ struct AutoSelectSetupView: View {
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
             }
+        }
+    }
+
+    private func handlePermissionAction() {
+        switch viewModel.permission {
+        case .needsRequest:
+            Task { await viewModel.requestPermission() }
+        case .needsSettings:
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        default:
+            break
         }
     }
 }
