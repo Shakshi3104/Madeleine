@@ -159,28 +159,60 @@ actor AutoCurator {
             guard let idx = sceneIdxByAsset[asset.localIdentifier] else { continue }
             grouped[idx].append((asset, score))
         }
-        var sceneQueues = grouped
+        let sceneQueues = grouped
             .map { $0.sorted { $0.1.aesthetic > $1.1.aesthetic } }
             .filter { !$0.isEmpty }
         if sceneQueues.isEmpty { return [] }
 
-        var picked: [(PHAsset, ImageQualityScorer.Score)] = []
-        let maxRounds = (targetCount + sceneQueues.count - 1) / sceneQueues.count + 1
+        let quotas = proportionalQuotas(
+            sceneSizes: sceneQueues.map { $0.count },
+            targetCount: targetCount
+        )
 
-        for _ in 0..<maxRounds {
-            for sceneIdx in 0..<sceneQueues.count {
-                if picked.count >= targetCount { return picked }
-                while !sceneQueues[sceneIdx].isEmpty {
-                    let candidate = sceneQueues[sceneIdx].removeFirst()
-                    if !isDuplicate(candidate.1, against: picked.map { $0.1 }) {
-                        picked.append(candidate)
-                        break
-                    }
+        var picked: [(PHAsset, ImageQualityScorer.Score)] = []
+        for (sceneIdx, scene) in sceneQueues.enumerated() {
+            var taken = 0
+            for candidate in scene {
+                if taken >= quotas[sceneIdx] || picked.count >= targetCount { break }
+                if !isDuplicate(candidate.1, against: picked.map { $0.1 }) {
+                    picked.append(candidate)
+                    taken += 1
                 }
             }
-            if sceneQueues.allSatisfy({ $0.isEmpty }) { break }
+        }
+
+        // quota の丸めや重複排除で目標に届かなければ、残った候補から
+        // 美的スコア順で詰める
+        if picked.count < targetCount {
+            let pickedIDs = Set(picked.map { $0.1.assetID })
+            let leftovers = sceneQueues
+                .flatMap { $0 }
+                .filter { !pickedIDs.contains($0.1.assetID) }
+                .sorted { $0.1.aesthetic > $1.1.aesthetic }
+            for candidate in leftovers {
+                if picked.count >= targetCount { break }
+                if !isDuplicate(candidate.1, against: picked.map { $0.1 }) {
+                    picked.append(candidate)
+                }
+            }
         }
         return picked
+    }
+
+    /// シーンごとの枠数を写真数に比例配分する。シーン数 ≤ targetCount のときは
+    /// 「どのシーンからも最低 1 枚」を保証 (= 偏った旅行でも全シーンに代表が
+    /// 残る)。シーン数 > targetCount のときは 0 を許容して小さいシーンを落とす。
+    /// シーン内の写真数を超えて配分することはない。
+    private func proportionalQuotas(sceneSizes: [Int], targetCount: Int) -> [Int] {
+        let totalAssets = sceneSizes.reduce(0, +)
+        guard totalAssets > 0 else { return Array(repeating: 0, count: sceneSizes.count) }
+        let allowZero = sceneSizes.count > targetCount
+
+        return sceneSizes.map { size in
+            let proportional = Double(targetCount) * Double(size) / Double(totalAssets)
+            let base = allowZero ? Int(proportional.rounded()) : max(1, Int(proportional.rounded()))
+            return min(size, base)
+        }
     }
 
     private func isDuplicate(
