@@ -31,7 +31,14 @@ final class AutoSelectSetupViewModel {
     private var countTask: Task<Void, Never>?
 
     init() {
-        let today = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        // MultiDatePicker は .calendar / .era 込みの DateComponents を出し入れする。
+        // ここで生成する初期値も同じ形にしないと「カレンダー上同じ日」でも
+        // Hashable 上は別物として Set に二重で残り、再選択時に古い値が
+        // 残留する挙動になる。
+        let today = Calendar.current.dateComponents(
+            [.calendar, .era, .year, .month, .day],
+            from: .now
+        )
         self.selectedDates = [today]
     }
 
