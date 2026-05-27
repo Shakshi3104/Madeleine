@@ -39,13 +39,14 @@ final class AutoSelectingViewModel {
                         }
                     }
                 )
-                if Task.isCancelled {
-                    onCancelled()
-                } else {
+                if !Task.isCancelled {
                     onCompleted(clips)
                 }
             } catch is CancellationError {
-                onCancelled()
+                // silent: cancellation is initiated by the Cancel button
+                // (which also calls onCancelled itself) or by the view dismissing.
+                // We don't fire onCancelled here, otherwise swipe-back from the
+                // parent would re-trigger navigation past the parent.
             } catch {
                 onFailed(error)
             }
@@ -99,6 +100,7 @@ struct AutoSelectingView: View {
 
             Button {
                 viewModel.cancel()
+                onCancelled()
             } label: {
                 Text("Cancel")
                     .frame(width: 200, height: 50)
