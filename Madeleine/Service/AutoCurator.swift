@@ -36,13 +36,12 @@ actor AutoCurator {
     private let duplicateThreshold: Double = 0.6
 
     func curate(
-        from: Date,
-        to: Date,
+        dates: [Date],
         targetCount: Int,
         progress: (@Sendable (Progress) -> Void)? = nil
     ) async throws -> [CuratedClip] {
         progress?(Progress(stage: .fetching, percent: 0))
-        let assets = fetchLivePhotos(from: from, to: to)
+        let assets = fetchLivePhotos(dates: dates)
         guard !assets.isEmpty else { throw CurationError.noAssetsFound }
 
         try Task.checkCancellation()
@@ -67,12 +66,14 @@ actor AutoCurator {
         }
     }
 
-    func count(from: Date, to: Date) -> Int {
-        PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(from: from, to: to)).count
+    func count(dates: [Date]) -> Int {
+        guard !dates.isEmpty else { return 0 }
+        return PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(dates: dates)).count
     }
 
-    private func fetchLivePhotos(from: Date, to: Date) -> [PHAsset] {
-        let result = PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(from: from, to: to))
+    private func fetchLivePhotos(dates: [Date]) -> [PHAsset] {
+        guard !dates.isEmpty else { return [] }
+        let result = PHAsset.fetchAssets(with: .image, options: Self.fetchOptions(dates: dates))
         var assets: [PHAsset] = []
         result.enumerateObjects { asset, _, _ in
             assets.append(asset)
@@ -80,14 +81,27 @@ actor AutoCurator {
         return assets
     }
 
-    private static func fetchOptions(from: Date, to: Date) -> PHFetchOptions {
-        let options = PHFetchOptions()
-        options.predicate = NSPredicate(
-            format: "(mediaSubtypes & %d) != 0 AND creationDate >= %@ AND creationDate <= %@",
-            PHAssetMediaSubtype.photoLive.rawValue,
-            from as NSDate,
-            to as NSDate
+    private static func fetchOptions(dates: [Date]) -> PHFetchOptions {
+        let cal = Calendar.current
+        let dayPredicates: [NSPredicate] = dates.map { day in
+            let start = cal.startOfDay(for: day)
+            let end = cal.date(byAdding: .day, value: 1, to: start) ?? start
+            return NSPredicate(
+                format: "creationDate >= %@ AND creationDate < %@",
+                start as NSDate,
+                end as NSDate
+            )
+        }
+        let livePhotoPredicate = NSPredicate(
+            format: "(mediaSubtypes & %d) != 0",
+            PHAssetMediaSubtype.photoLive.rawValue
         )
+
+        let options = PHFetchOptions()
+        options.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            livePhotoPredicate,
+            NSCompoundPredicate(orPredicateWithSubpredicates: dayPredicates)
+        ])
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
         return options
     }

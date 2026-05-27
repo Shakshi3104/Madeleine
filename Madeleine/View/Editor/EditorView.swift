@@ -66,8 +66,7 @@ struct EditorView: View {
                 }
             }
             if viewModel.project.isAutoSelected,
-               viewModel.project.autoSelectFromDate != nil,
-               viewModel.project.autoSelectToDate != nil {
+               !(viewModel.project.autoSelectDates ?? []).isEmpty {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
@@ -146,18 +145,16 @@ struct EditorView: View {
             titleVisibility: .visible
         ) {
             Button("Re-run", role: .destructive) {
-                guard let from = viewModel.project.autoSelectFromDate,
-                      let to = viewModel.project.autoSelectToDate else { return }
+                guard let dates = viewModel.project.autoSelectDates, !dates.isEmpty else { return }
                 navigationPath.append(AppDestination.autoSelectingRerun(
                     viewModel.project,
-                    from: from,
-                    to: to,
+                    dates: dates,
                     targetCount: viewModel.project.autoSelectTargetCount
                 ))
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This will replace the current clips with a fresh selection from the same date range.")
+            Text("This will replace the current clips with a fresh selection from the same dates.")
         }
     }
 

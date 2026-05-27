@@ -24,8 +24,7 @@ final class VlogProject {
 
     // 自動セレクトのパラメータ
     var isAutoSelected: Bool = false
-    var autoSelectFromDate: Date?
-    var autoSelectToDate: Date?
+    var autoSelectDates: [Date]?
     var autoSelectTargetCount: Int = 30
 
     /// 編集レシピ。順序は clip.order の昇順

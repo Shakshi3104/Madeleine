@@ -19,8 +19,7 @@ final class AutoSelectSetupViewModel {
         case needsSettings
     }
 
-    var fromDate: Date
-    var toDate: Date
+    var selectedDates: Set<DateComponents>
     var targetCount: Int = 30
 
     var candidateCount: Int?
@@ -32,10 +31,13 @@ final class AutoSelectSetupViewModel {
     private var countTask: Task<Void, Never>?
 
     init() {
-        let now = Date.now
+        let today = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        self.selectedDates = [today]
+    }
+
+    var dates: [Date] {
         let cal = Calendar.current
-        self.toDate = now
-        self.fromDate = cal.date(byAdding: .day, value: -7, to: now) ?? now
+        return selectedDates.compactMap { cal.date(from: $0) }.sorted()
     }
 
     func checkPermission() {
@@ -61,11 +63,15 @@ final class AutoSelectSetupViewModel {
     func refreshCount() {
         guard permission == .authorized else { return }
         countTask?.cancel()
+        let dates = self.dates
+        guard !dates.isEmpty else {
+            candidateCount = 0
+            isCounting = false
+            return
+        }
         isCounting = true
-        let from = fromDate
-        let to = toDate
         countTask = Task { [curator] in
-            let count = await curator.count(from: from, to: to)
+            let count = await curator.count(dates: dates)
             if Task.isCancelled { return }
             self.candidateCount = count
             self.isCounting = false
@@ -75,7 +81,7 @@ final class AutoSelectSetupViewModel {
 
 struct AutoSelectSetupView: View {
     @State private var viewModel = AutoSelectSetupViewModel()
-    let onStart: (Date, Date, Int) -> Void
+    let onStart: ([Date], Int) -> Void
 
     var body: some View {
         Group {
@@ -101,64 +107,47 @@ struct AutoSelectSetupView: View {
 
     private var form: some View {
         Form {
-            Section("Date Range") {
-                DatePicker(
-                    "From",
-                    selection: $viewModel.fromDate,
-                    in: ...viewModel.toDate,
-                    displayedComponents: .date
-                )
-                DatePicker(
-                    "To",
-                    selection: $viewModel.toDate,
-                    in: viewModel.fromDate...,
-                    displayedComponents: .date
-                )
+            Section("Dates") {
+                MultiDatePicker("Dates", selection: $viewModel.selectedDates)
+                    .labelsHidden()
+            }
+
+            Section {
                 candidateCountLabel
             }
 
-            Section("Count") {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Target")
-                        Spacer()
-                        Text("\(viewModel.targetCount) photos")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    Slider(
-                        value: Binding(
-                            get: { Double(viewModel.targetCount) },
-                            set: { viewModel.targetCount = Int($0) }
-                        ),
-                        in: 10...50,
-                        step: 1
-                    )
+            Section("Duration") {
+                Picker("Duration", selection: $viewModel.targetCount) {
+                    Text("15s").tag(15)
+                    Text("30s").tag(30)
+                    Text("45s").tag(45)
+                    Text("60s").tag(60)
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
 
             Section {
                 Button {
-                    onStart(viewModel.fromDate, viewModel.toDate, viewModel.targetCount)
+                    onStart(viewModel.dates, viewModel.targetCount)
                 } label: {
                     Text("Start Auto Select")
                         .frame(maxWidth: .infinity)
                         .fontWeight(.semibold)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled((viewModel.candidateCount ?? 0) == 0)
+                .disabled(viewModel.dates.isEmpty || (viewModel.candidateCount ?? 0) == 0)
                 .listRowBackground(Color.clear)
             }
         }
-        .onChange(of: viewModel.fromDate) { _, _ in viewModel.refreshCount() }
-        .onChange(of: viewModel.toDate) { _, _ in viewModel.refreshCount() }
+        .onChange(of: viewModel.selectedDates) { _, _ in viewModel.refreshCount() }
     }
 
     private var permissionPrompt: some View {
         ContentUnavailableView {
             Label("Photo Library Access Needed", systemImage: "lock.shield")
         } description: {
-            Text("Auto Select needs access to your full photo library so it can find Live Photos taken in the selected date range.")
+            Text("Auto Select needs access to your full photo library so it can find Live Photos taken on the selected dates.")
         } actions: {
             Button {
                 handlePermissionAction()
@@ -202,6 +191,6 @@ struct AutoSelectSetupView: View {
 
 #Preview {
     NavigationStack {
-        AutoSelectSetupView { _, _, _ in }
+        AutoSelectSetupView { _, _ in }
     }
 }

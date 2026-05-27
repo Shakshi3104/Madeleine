@@ -16,8 +16,7 @@ final class AutoSelectingViewModel {
     private var currentTask: Task<Void, Never>?
 
     func start(
-        from: Date,
-        to: Date,
+        dates: [Date],
         targetCount: Int,
         onCompleted: @escaping @MainActor ([AutoCurator.CuratedClip]) -> Void,
         onCancelled: @escaping @MainActor () -> Void,
@@ -28,8 +27,7 @@ final class AutoSelectingViewModel {
         currentTask = Task { @MainActor in
             do {
                 let clips = try await curator.curate(
-                    from: from,
-                    to: to,
+                    dates: dates,
                     targetCount: targetCount,
                     progress: { [weak self] progress in
                         Task { @MainActor [weak self] in
@@ -59,8 +57,7 @@ final class AutoSelectingViewModel {
 }
 
 struct AutoSelectingView: View {
-    let fromDate: Date
-    let toDate: Date
+    let dates: [Date]
     let targetCount: Int
     let onCompleted: ([AutoCurator.CuratedClip]) -> Void
     let onCancelled: () -> Void
@@ -113,8 +110,7 @@ struct AutoSelectingView: View {
         .navigationBarBackButtonHidden()
         .task {
             viewModel.start(
-                from: fromDate,
-                to: toDate,
+                dates: dates,
                 targetCount: targetCount,
                 onCompleted: onCompleted,
                 onCancelled: onCancelled,
@@ -139,8 +135,7 @@ struct AutoSelectingView: View {
 #Preview {
     NavigationStack {
         AutoSelectingView(
-            fromDate: Date.now.addingTimeInterval(-7 * 86400),
-            toDate: .now,
+            dates: [.now],
             targetCount: 30,
             onCompleted: { _ in },
             onCancelled: {},

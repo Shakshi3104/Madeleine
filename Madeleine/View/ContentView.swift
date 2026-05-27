@@ -16,8 +16,8 @@ enum AppDestination: Hashable {
     case extracting(VlogProject)
     case editor(VlogProject, [UUID: URL])
     case autoSelectSetup
-    case autoSelecting(from: Date, to: Date, targetCount: Int)
-    case autoSelectingRerun(VlogProject, from: Date, to: Date, targetCount: Int)
+    case autoSelecting(dates: [Date], targetCount: Int)
+    case autoSelectingRerun(VlogProject, dates: [Date], targetCount: Int)
 
     static func == (lhs: AppDestination, rhs: AppDestination) -> Bool {
         switch (lhs, rhs) {
@@ -27,10 +27,10 @@ enum AppDestination: Hashable {
             return a.persistentModelID == b.persistentModelID
         case (.autoSelectSetup, .autoSelectSetup):
             return true
-        case let (.autoSelecting(a1, a2, a3), .autoSelecting(b1, b2, b3)):
-            return a1 == b1 && a2 == b2 && a3 == b3
-        case let (.autoSelectingRerun(p1, f1, t1, n1), .autoSelectingRerun(p2, f2, t2, n2)):
-            return p1.persistentModelID == p2.persistentModelID && f1 == f2 && t1 == t2 && n1 == n2
+        case let (.autoSelecting(d1, n1), .autoSelecting(d2, n2)):
+            return d1 == d2 && n1 == n2
+        case let (.autoSelectingRerun(p1, d1, n1), .autoSelectingRerun(p2, d2, n2)):
+            return p1.persistentModelID == p2.persistentModelID && d1 == d2 && n1 == n2
         default:
             return false
         }
@@ -46,16 +46,14 @@ enum AppDestination: Hashable {
             hasher.combine(project.persistentModelID)
         case .autoSelectSetup:
             hasher.combine(2)
-        case let .autoSelecting(from, to, target):
+        case let .autoSelecting(dates, target):
             hasher.combine(3)
-            hasher.combine(from)
-            hasher.combine(to)
+            hasher.combine(dates)
             hasher.combine(target)
-        case let .autoSelectingRerun(project, from, to, target):
+        case let .autoSelectingRerun(project, dates, target):
             hasher.combine(4)
             hasher.combine(project.persistentModelID)
-            hasher.combine(from)
-            hasher.combine(to)
+            hasher.combine(dates)
             hasher.combine(target)
         }
     }
@@ -109,16 +107,15 @@ struct ContentView: View {
                 case .editor(let project, let urls):
                     EditorView(project: project, extractedURLs: urls, navigationPath: $navigationPath)
                 case .autoSelectSetup:
-                    AutoSelectSetupView { from, to, target in
-                        navigationPath.append(AppDestination.autoSelecting(from: from, to: to, targetCount: target))
+                    AutoSelectSetupView { dates, target in
+                        navigationPath.append(AppDestination.autoSelecting(dates: dates, targetCount: target))
                     }
-                case let .autoSelecting(from, to, target):
+                case let .autoSelecting(dates, target):
                     AutoSelectingView(
-                        fromDate: from,
-                        toDate: to,
+                        dates: dates,
                         targetCount: target,
                         onCompleted: { clips in
-                            handleAutoSelectCompleted(clips: clips, from: from, to: to, targetCount: target)
+                            handleAutoSelectCompleted(clips: clips, dates: dates, targetCount: target)
                         },
                         onCancelled: {
                             navigationPath = NavigationPath()
@@ -128,10 +125,9 @@ struct ContentView: View {
                             autoSelectErrorMessage = autoSelectMessage(for: error)
                         }
                     )
-                case let .autoSelectingRerun(project, from, to, target):
+                case let .autoSelectingRerun(project, dates, target):
                     AutoSelectingView(
-                        fromDate: from,
-                        toDate: to,
+                        dates: dates,
                         targetCount: target,
                         onCompleted: { clips in
                             replaceProjectClips(project: project, with: clips)
@@ -334,14 +330,12 @@ struct ContentView: View {
 
     private func handleAutoSelectCompleted(
         clips curatedClips: [AutoCurator.CuratedClip],
-        from: Date,
-        to: Date,
+        dates: [Date],
         targetCount: Int
     ) {
         let project = createAutoSelectedProject(
             curatedClips: curatedClips,
-            from: from,
-            to: to,
+            dates: dates,
             targetCount: targetCount
         )
         var newPath = NavigationPath()
@@ -351,8 +345,7 @@ struct ContentView: View {
 
     private func createAutoSelectedProject(
         curatedClips: [AutoCurator.CuratedClip],
-        from: Date,
-        to: Date,
+        dates: [Date],
         targetCount: Int
     ) -> VlogProject {
         let dateFormatter = DateFormatter()
@@ -360,8 +353,7 @@ struct ContentView: View {
         let defaultTitle = "Vlog \(dateFormatter.string(from: Date()))"
         let project = VlogProject(title: defaultTitle)
         project.isAutoSelected = true
-        project.autoSelectFromDate = from
-        project.autoSelectToDate = to
+        project.autoSelectDates = dates
         project.autoSelectTargetCount = targetCount
         modelContext.insert(project)
 
