@@ -19,39 +19,23 @@ final class AutoSelectSetupViewModel {
         case needsSettings
     }
 
-    var selectedDates: Set<DateComponents>
     var targetCount: Int = 30
-
     var candidateCount: Int?
     var isCounting: Bool = false
-
     var permission: Permission = .unknown
 
     private let curator = AutoCurator()
     private var countTask: Task<Void, Never>?
 
-    init() {
-        let today = Calendar.current.dateComponents(
-            [.calendar, .era, .year, .month, .day],
-            from: .now
-        )
-        self.selectedDates = [today]
-    }
-
-    var dates: [Date] {
-        let cal = Calendar.current
-        return selectedDates.compactMap { cal.date(from: $0) }.sorted()
-    }
-
     func checkPermission() {
         permission = Self.classify(PHPhotoLibrary.authorizationStatus(for: .readWrite))
     }
 
-    func requestPermission() async {
+    func requestPermission(currentDates: [Date]) async {
         let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         permission = Self.classify(status)
         if permission == .authorized {
-            refreshCount()
+            refreshCount(dates: currentDates)
         }
     }
 
@@ -63,10 +47,9 @@ final class AutoSelectSetupViewModel {
         }
     }
 
-    func refreshCount() {
+    func refreshCount(dates: [Date]) {
         guard permission == .authorized else { return }
         countTask?.cancel()
-        let dates = self.dates
         guard !dates.isEmpty else {
             candidateCount = 0
             isCounting = false
@@ -83,8 +66,20 @@ final class AutoSelectSetupViewModel {
 }
 
 struct AutoSelectSetupView: View {
+    @State private var selectedDates: Set<DateComponents> = {
+        let today = Calendar.current.dateComponents(
+            [.calendar, .era, .year, .month, .day],
+            from: .now
+        )
+        return [today]
+    }()
     @State private var viewModel = AutoSelectSetupViewModel()
     let onStart: ([Date], Int) -> Void
+
+    private var dates: [Date] {
+        let cal = Calendar.current
+        return selectedDates.compactMap { cal.date(from: $0) }.sorted()
+    }
 
     var body: some View {
         Group {
@@ -103,7 +98,7 @@ struct AutoSelectSetupView: View {
         .task {
             viewModel.checkPermission()
             if viewModel.permission == .authorized {
-                viewModel.refreshCount()
+                viewModel.refreshCount(dates: dates)
             }
         }
     }
@@ -111,7 +106,7 @@ struct AutoSelectSetupView: View {
     private var form: some View {
         Form {
             Section("Dates") {
-                MultiDatePicker("Dates", selection: $viewModel.selectedDates)
+                MultiDatePicker("Dates", selection: $selectedDates)
                     .labelsHidden()
                     .tint(.accentColor)
             }
@@ -133,18 +128,18 @@ struct AutoSelectSetupView: View {
 
             Section {
                 Button {
-                    onStart(viewModel.dates, viewModel.targetCount)
+                    onStart(dates, viewModel.targetCount)
                 } label: {
                     Text("Start Auto Select")
                         .frame(maxWidth: .infinity)
                         .fontWeight(.semibold)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(viewModel.dates.isEmpty || (viewModel.candidateCount ?? 0) == 0)
+                .disabled(dates.isEmpty || (viewModel.candidateCount ?? 0) == 0)
                 .listRowBackground(Color.clear)
             }
         }
-        .onChange(of: viewModel.selectedDates) { _, _ in viewModel.refreshCount() }
+        .onChange(of: selectedDates) { _, _ in viewModel.refreshCount(dates: dates) }
     }
 
     private var permissionPrompt: some View {
@@ -182,7 +177,7 @@ struct AutoSelectSetupView: View {
     private func handlePermissionAction() {
         switch viewModel.permission {
         case .needsRequest:
-            Task { await viewModel.requestPermission() }
+            Task { await viewModel.requestPermission(currentDates: dates) }
         case .needsSettings:
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
