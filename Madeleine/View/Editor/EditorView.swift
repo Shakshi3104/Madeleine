@@ -19,17 +19,14 @@ struct EditorView: View {
     @State private var showInfo = false
     @State private var previewingClip: VlogClip?
     @State private var additionalPhotos: [PhotosPickerItem] = []
-    @State private var showRerunConfirmation = false
-    @Binding var navigationPath: NavigationPath
 
     @Namespace private var glassNS
 
-    init(project: VlogProject, extractedURLs: [UUID: URL], navigationPath: Binding<NavigationPath>) {
+    init(project: VlogProject, extractedURLs: [UUID: URL]) {
         _viewModel = State(initialValue: EditorViewModel(
             project: project,
             extractedURLs: extractedURLs
         ))
-        _navigationPath = navigationPath
     }
 
     var body: some View {
@@ -63,21 +60,6 @@ struct EditorView: View {
                     isReordering.toggle()
                 } label: {
                     Image(systemName: isReordering ? "checkmark" : "arrow.up.arrow.down")
-                }
-            }
-            if viewModel.project.isAutoSelected,
-               !(viewModel.project.autoSelectDates ?? []).isEmpty {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button {
-                            showRerunConfirmation = true
-                        } label: {
-                            Label("Re-run Auto Select", systemImage: "wand.and.stars")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                    .accessibilityLabel("More")
                 }
             }
         }
@@ -138,23 +120,6 @@ struct EditorView: View {
             Button("OK") { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
-        }
-        .confirmationDialog(
-            "Re-run Auto Select?",
-            isPresented: $showRerunConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Re-run", role: .destructive) {
-                guard let dates = viewModel.project.autoSelectDates, !dates.isEmpty else { return }
-                navigationPath.append(AppDestination.autoSelectingRerun(
-                    viewModel.project,
-                    dates: dates,
-                    targetCount: viewModel.project.autoSelectTargetCount
-                ))
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will replace the current clips with a fresh selection from the same dates.")
         }
     }
 

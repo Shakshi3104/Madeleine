@@ -22,11 +22,6 @@ final class VlogProject {
     /// 動画の向き ("portrait" or "landscape")
     var orientationRaw: String = "portrait"
 
-    // 自動セレクトのパラメータ
-    var isAutoSelected: Bool = false
-    var autoSelectDates: [Date]?
-    var autoSelectTargetCount: Int = 30
-
     /// 編集レシピ。順序は clip.order の昇順
     @Relationship(deleteRule: .cascade, inverse: \VlogClip.project)
     var clips: [VlogClip]? = []

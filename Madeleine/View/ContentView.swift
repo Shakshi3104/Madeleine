@@ -17,7 +17,6 @@ enum AppDestination: Hashable {
     case editor(VlogProject, [UUID: URL])
     case autoSelectSetup
     case autoSelecting(dates: [Date], targetCount: Int)
-    case autoSelectingRerun(VlogProject, dates: [Date], targetCount: Int)
 
     static func == (lhs: AppDestination, rhs: AppDestination) -> Bool {
         switch (lhs, rhs) {
@@ -29,8 +28,6 @@ enum AppDestination: Hashable {
             return true
         case let (.autoSelecting(d1, n1), .autoSelecting(d2, n2)):
             return d1 == d2 && n1 == n2
-        case let (.autoSelectingRerun(p1, d1, n1), .autoSelectingRerun(p2, d2, n2)):
-            return p1.persistentModelID == p2.persistentModelID && d1 == d2 && n1 == n2
         default:
             return false
         }
@@ -48,11 +45,6 @@ enum AppDestination: Hashable {
             hasher.combine(2)
         case let .autoSelecting(dates, target):
             hasher.combine(3)
-            hasher.combine(dates)
-            hasher.combine(target)
-        case let .autoSelectingRerun(project, dates, target):
-            hasher.combine(4)
-            hasher.combine(project.persistentModelID)
             hasher.combine(dates)
             hasher.combine(target)
         }
@@ -105,7 +97,7 @@ struct ContentView: View {
                         navigationPath.append(AppDestination.editor(project, extractedURLs))
                     }
                 case .editor(let project, let urls):
-                    EditorView(project: project, extractedURLs: urls, navigationPath: $navigationPath)
+                    EditorView(project: project, extractedURLs: urls)
                 case .autoSelectSetup:
                     AutoSelectSetupView { dates, target in
                         navigationPath.append(AppDestination.autoSelecting(dates: dates, targetCount: target))
@@ -115,35 +107,13 @@ struct ContentView: View {
                         dates: dates,
                         targetCount: target,
                         onCompleted: { clips in
-                            handleAutoSelectCompleted(clips: clips, dates: dates, targetCount: target)
+                            handleAutoSelectCompleted(clips: clips)
                         },
                         onCancelled: {
                             navigationPath = NavigationPath()
                         },
                         onFailed: { error in
                             navigationPath = NavigationPath()
-                            autoSelectErrorMessage = autoSelectMessage(for: error)
-                        }
-                    )
-                case let .autoSelectingRerun(project, dates, target):
-                    AutoSelectingView(
-                        dates: dates,
-                        targetCount: target,
-                        onCompleted: { clips in
-                            replaceProjectClips(project: project, with: clips)
-                            var newPath = NavigationPath()
-                            newPath.append(AppDestination.extracting(project))
-                            navigationPath = newPath
-                        },
-                        onCancelled: {
-                            if !navigationPath.isEmpty {
-                                navigationPath.removeLast()
-                            }
-                        },
-                        onFailed: { error in
-                            if !navigationPath.isEmpty {
-                                navigationPath.removeLast()
-                            }
                             autoSelectErrorMessage = autoSelectMessage(for: error)
                         }
                     )
@@ -328,33 +298,20 @@ struct ContentView: View {
 
     // MARK: - Auto Select Helpers
 
-    private func handleAutoSelectCompleted(
-        clips curatedClips: [AutoCurator.CuratedClip],
-        dates: [Date],
-        targetCount: Int
-    ) {
-        let project = createAutoSelectedProject(
-            curatedClips: curatedClips,
-            dates: dates,
-            targetCount: targetCount
-        )
+    private func handleAutoSelectCompleted(clips curatedClips: [AutoCurator.CuratedClip]) {
+        let project = createAutoSelectedProject(curatedClips: curatedClips)
         var newPath = NavigationPath()
         newPath.append(AppDestination.extracting(project))
         navigationPath = newPath
     }
 
     private func createAutoSelectedProject(
-        curatedClips: [AutoCurator.CuratedClip],
-        dates: [Date],
-        targetCount: Int
+        curatedClips: [AutoCurator.CuratedClip]
     ) -> VlogProject {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd"
         let defaultTitle = "Vlog \(dateFormatter.string(from: Date()))"
         let project = VlogProject(title: defaultTitle)
-        project.isAutoSelected = true
-        project.autoSelectDates = dates
-        project.autoSelectTargetCount = targetCount
         modelContext.insert(project)
 
         for curated in curatedClips {
@@ -380,38 +337,6 @@ struct ContentView: View {
 
         project.updatedAt = .now
         return project
-    }
-
-    private func replaceProjectClips(
-        project: VlogProject,
-        with curatedClips: [AutoCurator.CuratedClip]
-    ) {
-        if let existing = project.clips {
-            for clip in existing {
-                modelContext.delete(clip)
-            }
-        }
-        for curated in curatedClips {
-            let assets = PHAsset.fetchAssets(withLocalIdentifiers: [curated.sourceCloudID], options: nil)
-            let filename: String
-            let captureDate: Date?
-            if let asset = assets.firstObject {
-                filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
-                captureDate = asset.creationDate
-            } else {
-                filename = ""
-                captureDate = nil
-            }
-            let clip = VlogClip(
-                order: curated.order,
-                sourceCloudID: curated.sourceCloudID,
-                originalFilename: filename,
-                captureDate: captureDate
-            )
-            clip.project = project
-            modelContext.insert(clip)
-        }
-        project.updatedAt = .now
     }
 
     private func autoSelectMessage(for error: Error) -> String {
