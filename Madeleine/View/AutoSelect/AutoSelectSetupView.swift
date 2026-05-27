@@ -66,13 +66,29 @@ final class AutoSelectSetupViewModel {
 }
 
 struct AutoSelectSetupView: View {
-    @State private var selectedDates: Set<DateComponents> = []
+    @State private var pickedDays: Set<Date> = []
     @State private var viewModel = AutoSelectSetupViewModel()
     let onStart: ([Date], Int) -> Void
 
     private var dates: [Date] {
-        let cal = Calendar.current
-        return selectedDates.compactMap { cal.date(from: $0) }.sorted()
+        pickedDays.sorted()
+    }
+
+    private var dateComponentsBinding: Binding<Set<DateComponents>> {
+        Binding(
+            get: {
+                let cal = Calendar.current
+                return Set(pickedDays.map {
+                    cal.dateComponents([.calendar, .era, .year, .month, .day], from: $0)
+                })
+            },
+            set: { newValue in
+                let cal = Calendar.current
+                pickedDays = Set(newValue.compactMap {
+                    cal.date(from: $0).map { cal.startOfDay(for: $0) }
+                })
+            }
+        )
     }
 
     var body: some View {
@@ -100,7 +116,7 @@ struct AutoSelectSetupView: View {
     private var form: some View {
         Form {
             Section("Dates") {
-                MultiDatePicker("Dates", selection: $selectedDates)
+                MultiDatePicker("Dates", selection: dateComponentsBinding)
                     .labelsHidden()
                     .tint(.accentColor)
             }
@@ -133,7 +149,7 @@ struct AutoSelectSetupView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .onChange(of: selectedDates) { _, _ in viewModel.refreshCount(dates: dates) }
+        .onChange(of: pickedDays) { _, _ in viewModel.refreshCount(dates: dates) }
     }
 
     private var permissionPrompt: some View {
