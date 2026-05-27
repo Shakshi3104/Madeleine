@@ -66,13 +66,7 @@ final class AutoSelectSetupViewModel {
 }
 
 struct AutoSelectSetupView: View {
-    @State private var selectedDates: Set<DateComponents> = {
-        let today = Calendar.current.dateComponents(
-            [.calendar, .era, .year, .month, .day],
-            from: .now
-        )
-        return [today]
-    }()
+    @State private var selectedDates: Set<DateComponents> = []
     @State private var viewModel = AutoSelectSetupViewModel()
     let onStart: ([Date], Int) -> Void
 
