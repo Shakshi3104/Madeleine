@@ -363,8 +363,10 @@ struct ContentView: View {
             switch curationError {
             case .noAssetsFound:
                 return "No Live Photos found in this date range. Try widening the range and tap again."
+            case .evaluationFailed:
+                return "Couldn't read any of the photos in this range. They may only be stored in iCloud — open the Photos app and let them download, then try again."
             case .noResults:
-                return "Couldn't find suitable clips to use."
+                return "All photos in this range were skipped as utility (screenshots, receipts, etc.). Try a different date range."
             }
         }
         return error.localizedDescription

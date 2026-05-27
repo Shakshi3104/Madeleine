@@ -26,6 +26,7 @@ actor AutoCurator {
 
     enum CurationError: Error {
         case noAssetsFound
+        case evaluationFailed
         case noResults
     }
 
@@ -50,6 +51,7 @@ actor AutoCurator {
 
         try Task.checkCancellation()
         let scored = try await scoreAll(assets: assets, progress: progress)
+        guard !scored.isEmpty else { throw CurationError.evaluationFailed }
 
         try Task.checkCancellation()
         progress?(Progress(stage: .selecting, percent: 0.9))
