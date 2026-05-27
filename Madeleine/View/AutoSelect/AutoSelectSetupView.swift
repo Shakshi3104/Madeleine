@@ -110,6 +110,7 @@ struct AutoSelectSetupView: View {
             Section("Dates") {
                 MultiDatePicker("Dates", selection: $viewModel.selectedDates)
                     .labelsHidden()
+                    .tint(.accentColor)
             }
 
             Section {
