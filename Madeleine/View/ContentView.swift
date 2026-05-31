@@ -15,6 +15,8 @@ import Photos
 enum AppDestination: Hashable {
     case extracting(VlogProject)
     case editor(VlogProject, [UUID: URL])
+    case autoSelectSetup
+    case autoSelecting(dates: [Date], targetCount: Int)
 
     static func == (lhs: AppDestination, rhs: AppDestination) -> Bool {
         switch (lhs, rhs) {
@@ -22,6 +24,10 @@ enum AppDestination: Hashable {
             return a.persistentModelID == b.persistentModelID
         case let (.editor(a, _), .editor(b, _)):
             return a.persistentModelID == b.persistentModelID
+        case (.autoSelectSetup, .autoSelectSetup):
+            return true
+        case let (.autoSelecting(d1, n1), .autoSelecting(d2, n2)):
+            return d1 == d2 && n1 == n2
         default:
             return false
         }
@@ -35,6 +41,12 @@ enum AppDestination: Hashable {
         case .editor(let project, _):
             hasher.combine(1)
             hasher.combine(project.persistentModelID)
+        case .autoSelectSetup:
+            hasher.combine(2)
+        case let .autoSelecting(dates, target):
+            hasher.combine(3)
+            hasher.combine(dates)
+            hasher.combine(target)
         }
     }
 }
@@ -51,6 +63,8 @@ struct ContentView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showAlert = false
+    @State private var isShowingPhotosPicker = false
+    @State private var autoSelectErrorMessage: String?
 
     @Namespace private var glassNS
 
@@ -84,6 +98,25 @@ struct ContentView: View {
                     }
                 case .editor(let project, let urls):
                     EditorView(project: project, extractedURLs: urls)
+                case .autoSelectSetup:
+                    AutoSelectSetupView { dates, target in
+                        navigationPath.append(AppDestination.autoSelecting(dates: dates, targetCount: target))
+                    }
+                case let .autoSelecting(dates, target):
+                    AutoSelectingView(
+                        dates: dates,
+                        targetCount: target,
+                        onCompleted: { clips in
+                            handleAutoSelectCompleted(clips: clips)
+                        },
+                        onCancelled: {
+                            navigationPath = NavigationPath()
+                        },
+                        onFailed: { error in
+                            navigationPath = NavigationPath()
+                            autoSelectErrorMessage = autoSelectMessage(for: error)
+                        }
+                    )
                 }
             }
         }
@@ -100,6 +133,18 @@ struct ContentView: View {
             if PHPhotoLibrary.authorizationStatus(for: .readWrite) == .notDetermined {
                 await PHPhotoLibrary.requestAuthorization(for: .readWrite)
             }
+        }
+        .alert(
+            "Auto Select Failed",
+            isPresented: Binding(
+                get: { autoSelectErrorMessage != nil },
+                set: { if !$0 { autoSelectErrorMessage = nil } }
+            ),
+            presenting: autoSelectErrorMessage
+        ) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(message)
         }
     }
 
@@ -142,12 +187,18 @@ struct ContentView: View {
 
     private var newProjectButton: some View {
         GlassEffectContainer {
-            PhotosPicker(
-                selection: $selectedPhotos,
-                maxSelectionCount: 30,
-                matching: .livePhotos,
-                photoLibrary: .shared()
-            ) {
+            Menu {
+                Button {
+                    navigationPath.append(AppDestination.autoSelectSetup)
+                } label: {
+                    Label("Pick photos from a trip", systemImage: "sparkles")
+                }
+                Button {
+                    isShowingPhotosPicker = true
+                } label: {
+                    Label("Pick photos manually", systemImage: "plus")
+                }
+            } label: {
                 Image(systemName: "plus")
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -159,6 +210,13 @@ struct ContentView: View {
             .accessibilityLabel("New Vlog")
             .glassEffectID("newProject", in: glassNS)
         }
+        .photosPicker(
+            isPresented: $isShowingPhotosPicker,
+            selection: $selectedPhotos,
+            maxSelectionCount: 30,
+            matching: .livePhotos,
+            photoLibrary: .shared()
+        )
         .onChange(of: selectedPhotos) { _, newItems in
             guard !newItems.isEmpty else { return }
             let project = createProject(from: newItems)
@@ -236,6 +294,63 @@ struct ContentView: View {
                 modelContext.delete(projects[index])
             }
         }
+    }
+
+    // MARK: - Auto Select Helpers
+
+    private func handleAutoSelectCompleted(clips curatedClips: [AutoCurator.CuratedClip]) {
+        let project = createAutoSelectedProject(curatedClips: curatedClips)
+        var newPath = NavigationPath()
+        newPath.append(AppDestination.extracting(project))
+        navigationPath = newPath
+    }
+
+    private func createAutoSelectedProject(
+        curatedClips: [AutoCurator.CuratedClip]
+    ) -> VlogProject {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+        let defaultTitle = "Vlog \(dateFormatter.string(from: Date()))"
+        let project = VlogProject(title: defaultTitle)
+        modelContext.insert(project)
+
+        for curated in curatedClips {
+            let assets = PHAsset.fetchAssets(withLocalIdentifiers: [curated.sourceCloudID], options: nil)
+            let filename: String
+            let captureDate: Date?
+            if let asset = assets.firstObject {
+                filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
+                captureDate = asset.creationDate
+            } else {
+                filename = ""
+                captureDate = nil
+            }
+            let clip = VlogClip(
+                order: curated.order,
+                sourceCloudID: curated.sourceCloudID,
+                originalFilename: filename,
+                captureDate: captureDate
+            )
+            clip.project = project
+            modelContext.insert(clip)
+        }
+
+        project.updatedAt = .now
+        return project
+    }
+
+    private func autoSelectMessage(for error: Error) -> String {
+        if let curationError = error as? AutoCurator.CurationError {
+            switch curationError {
+            case .noAssetsFound:
+                return "No Live Photos found in this date range. Try widening the range and tap again."
+            case .evaluationFailed:
+                return "Couldn't read any of the photos in this range. They may only be stored in iCloud — open the Photos app and let them download, then try again."
+            case .noResults:
+                return "All photos in this range were skipped as utility (screenshots, receipts, etc.). Try a different date range."
+            }
+        }
+        return error.localizedDescription
     }
 }
 
