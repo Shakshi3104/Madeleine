@@ -119,6 +119,13 @@ struct AutoSelectSetupView: View {
                 MultiDatePicker("Dates", selection: dateComponentsBinding)
                     .labelsHidden()
                     .tint(.accentColor)
+                if !pickedDays.isEmpty {
+                    Button {
+                        pickedDays = []
+                    } label: {
+                        Text("Clear Selection")
+                    }
+                }
             }
 
             Section {
