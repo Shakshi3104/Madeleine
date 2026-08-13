@@ -7,7 +7,9 @@
     "EXPORT_OPTIONS": ".asc/export-options.plist",
     "VERSION": "",
     "GROUP": "",
-    "SUBMIT_BETA": "true"
+    "SUBMIT_BETA": "true",
+    "TEST_NOTES": "",
+    "TEST_NOTES_LOCALE": "en-US"
   },
   "workflows": {
     "testflight_internal": {
@@ -60,7 +62,7 @@
         },
         {
           "name": "publish",
-          "run": "SUBMIT_FLAGS=\"\"; if [ \"$SUBMIT_BETA\" = \"true\" ]; then SUBMIT_FLAGS=\"--submit --confirm\"; fi; asc publish testflight --app \"$APP_ID\" --ipa ${steps.export.IPA_PATH} --group \"$GROUP\" --wait $SUBMIT_FLAGS --output json"
+          "run": "set --; if [ \"$SUBMIT_BETA\" = \"true\" ]; then set -- \"$@\" --submit --confirm; fi; if [ -n \"$TEST_NOTES\" ]; then set -- \"$@\" --test-notes \"$TEST_NOTES\" --locale \"$TEST_NOTES_LOCALE\"; fi; asc publish testflight --app \"$APP_ID\" --ipa ${steps.export.IPA_PATH} --group \"$GROUP\" --wait \"$@\" --output json"
         }
       ]
     }
