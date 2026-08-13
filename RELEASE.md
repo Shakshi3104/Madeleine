@@ -42,7 +42,7 @@ App Store Connect → Madeleine → TestFlight → **テスト情報** で以下
 
 > **What to Test(テスト内容)はビルド単位**
 >
-> ベータ版アプリの説明と違い、What to Test はビルドごとに最低 1 ロケール必須。デフォルトでは GUI で手入力しますが、ワークフローから自動入力したい場合は `.asc/workflow.json` の `publish` ステップに `--test-notes "..." --locale en-US` を追加することで API 経由で書けます。
+> ベータ版アプリの説明と違い、What to Test はビルドごとに最低 1 ロケール必須。`testflight_external` の `publish` ステップは `TEST_NOTES` に対応済みなので、リリース時に渡せば API 経由で自動入力されます(下記「What to Test を入れる」を参照)。
 
 ---
 
@@ -73,6 +73,29 @@ asc workflow run testflight_external VERSION:1.0 GROUP:"Madeleine Tester"
 archive → IPA エクスポート → アップロード → 指定 Beta Group へ配信 → Beta App Review 提出 を 1 コマンドで実行。
 
 `GROUP` は App Store Connect で作成した External Beta Group の名前 or ID を渡します。
+
+### What to Test を入れる
+
+`TEST_NOTES` を渡すと `publish` ステップが `--test-notes` / `--locale` を付けて実行し、ビルドの What to Test が自動で埋まります。ロケールは `TEST_NOTES_LOCALE`(既定 `en-US`)。
+
+```bash
+asc workflow run testflight_external VERSION:1.0 GROUP:"Baker (Madeleine Tester)" SUBMIT_BETA:false TEST_NOTES:"Changes in this build:
+
+- ...
+
+What to test:
+1. ..."
+```
+
+`TEST_NOTES` 未指定時は従来どおり両フラグとも付きません(その場合は GUI で入力するか、アップロード後に下記でリトライ)。
+
+すでにアップロード済みのビルドに後から入れる / 書き換える場合:
+
+```bash
+asc builds test-notes update --app "$ASC_APP_ID" --latest --locale en-US --whats-new "..."
+```
+
+> `publish` が空の localization を先に作るため、後追いで入れるときは `create` ではなく `update` を使う(`create` は `There is an entity with same 'locale'` で失敗する)。
 
 ### 同じ Version の再ビルド(再審査不要)
 
