@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct AboutView: View {
-    private static let websiteURL = URL(string: "https://shakshi3104.github.io/Madeleine/")!
-    private static let privacyURL = URL(string: "https://shakshi3104.github.io/Madeleine/privacy.html")!
+    private static let websiteURL = URL(string: "https://shakshi3104.github.io/apps/madeleine/")!
+    private static let privacyURL = URL(string: "https://shakshi3104.github.io/apps/madeleine/privacy/")!
     private static let githubURL = URL(string: "https://github.com/Shakshi3104/Madeleine")!
     private static let supportURL = URL(string: "mailto:shakshi3104.support@icloud.com?subject=Madeleine%20Support")!
 
