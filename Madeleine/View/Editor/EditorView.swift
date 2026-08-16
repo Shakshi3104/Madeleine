@@ -57,6 +57,16 @@ struct EditorView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
+                    viewModel.toggleTimestamp()
+                } label: {
+                    Image(systemName: viewModel.showsTimestamp ? "calendar.badge.checkmark" : "calendar")
+                        .foregroundStyle(viewModel.showsTimestamp ? Color.accentColor : .primary)
+                }
+                .accessibilityLabel("Timestamp")
+                .accessibilityValue(viewModel.showsTimestamp ? "On" : "Off")
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
                     isReordering.toggle()
                 } label: {
                     Image(systemName: isReordering ? "checkmark" : "arrow.up.arrow.down")
@@ -254,6 +264,7 @@ private struct ProjectInfoSheet: View {
                     LabeledContent("Photos", value: "\(clipCount)")
                     LabeledContent("Duration", value: durationText)
                     LabeledContent("Orientation", value: orientation.displayName)
+                    LabeledContent("Timestamp", value: project.showsTimestamp ? "On" : "Off")
                 }
                 Section {
                     LabeledContent("Created", value: Self.dateFormatter.string(from: project.createdAt))
