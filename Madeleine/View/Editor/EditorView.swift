@@ -16,7 +16,6 @@ struct EditorView: View {
     @State private var isEditingTitle = false
     @State private var editingTitle = ""
     @State private var isReordering = false
-    @State private var showInfo = false
     @State private var previewingClip: VlogClip?
     @State private var additionalPhotos: [PhotosPickerItem] = []
 
@@ -57,16 +56,6 @@ struct EditorView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    viewModel.toggleTimestamp()
-                } label: {
-                    Image(systemName: viewModel.showsTimestamp ? "calendar.badge.checkmark" : "calendar")
-                        .foregroundStyle(viewModel.showsTimestamp ? Color.accentColor : .primary)
-                }
-                .accessibilityLabel("Timestamp")
-                .accessibilityValue(viewModel.showsTimestamp ? "On" : "Off")
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
                     isReordering.toggle()
                 } label: {
                     Image(systemName: isReordering ? "checkmark" : "arrow.up.arrow.down")
@@ -85,14 +74,6 @@ struct EditorView: View {
             if let url = viewModel.exportedFileURL {
                 ShareSheet(url: url)
             }
-        }
-        .sheet(isPresented: $showInfo) {
-            ProjectInfoSheet(
-                project: viewModel.project,
-                clipCount: viewModel.sortedClips.count,
-                totalDuration: viewModel.sortedClips.reduce(0) { $0 + $1.trimDuration },
-                orientation: viewModel.orientation
-            )
         }
         .sheet(item: $previewingClip) { clip in
             ClipCropPreviewSheet(clip: clip, initialOrientation: viewModel.orientation)
@@ -162,7 +143,7 @@ struct EditorView: View {
 
             Spacer()
 
-            // 中央: プレビュー + 縦横切替 + インフォ（1つのガラスグループ）
+            // 中央: プレビュー + 縦横切替 + タイムスタンプ（1つのガラスグループ）
             HStack(spacing: 16) {
                 Button {
                     Task { await viewModel.generatePreview() }
@@ -191,13 +172,15 @@ struct EditorView: View {
                 .accessibilityLabel("Orientation")
 
                 Button {
-                    showInfo = true
+                    viewModel.toggleTimestamp()
                 } label: {
-                    Image(systemName: "info.circle")
+                    Image(systemName: viewModel.showsTimestamp ? "clock.badge.checkmark" : "clock")
                         .font(.title2)
+                        .foregroundStyle(viewModel.showsTimestamp ? Color.accentColor : .primary)
                         .frame(width: 56, height: 56)
                 }
-                .accessibilityLabel("Info")
+                .accessibilityLabel("Timestamp")
+                .accessibilityValue(viewModel.showsTimestamp ? "On" : "Off")
             }
             .padding(.horizontal, 6)
             .glassEffect()
@@ -231,50 +214,6 @@ struct EditorView: View {
         .padding(.horizontal)
         .padding(.bottom, 8)
         .tint(.primary)
-    }
-}
-
-// MARK: - Project Info Sheet
-
-private struct ProjectInfoSheet: View {
-    let project: VlogProject
-    let clipCount: Int
-    let totalDuration: Double
-    let orientation: VideoOrientation
-
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy/MM/dd HH:mm:ss"
-        return f
-    }()
-
-    private var durationText: String {
-        String(format: "%.1f s", totalDuration)
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Title")
-                            .foregroundStyle(.secondary)
-                        Text(project.title)
-                    }
-                    LabeledContent("Photos", value: "\(clipCount)")
-                    LabeledContent("Duration", value: durationText)
-                    LabeledContent("Orientation", value: orientation.displayName)
-                    LabeledContent("Timestamp", value: project.showsTimestamp ? "On" : "Off")
-                }
-                Section {
-                    LabeledContent("Created", value: Self.dateFormatter.string(from: project.createdAt))
-                    LabeledContent("Updated", value: Self.dateFormatter.string(from: project.updatedAt))
-                }
-            }
-            .navigationTitle("Info")
-            .navigationBarTitleDisplayMode(.inline)
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 
