@@ -191,7 +191,6 @@ struct EditorView: View {
             // 右: Live Photo 追加
             PhotosPicker(
                 selection: $additionalPhotos,
-                maxSelectionCount: 30,
                 matching: .livePhotos,
                 photoLibrary: .shared()
             ) {

@@ -160,36 +160,73 @@ final class EditorViewModel {
 
         let currentMaxOrder = sortedClips.last?.order ?? -1
         let existingIDs = Set(sortedClips.map(\.sourceCloudID))
+
+        let localIDs = items.compactMap(\.itemIdentifier)
+            .filter { !existingIDs.contains($0) }
+        guard !localIDs.isEmpty else { return }
+
+        // 1枚ずつ fetch すると枚数分メインスレッドが止まるのでまとめて引く
+        struct ClipInfo {
+            let localID: String
+            let filename: String
+            let captureDate: Date?
+        }
+        var infoByID: [String: ClipInfo] = [:]
+        PHAsset.fetchAssets(withLocalIdentifiers: localIDs, options: nil)
+            .enumerateObjects { asset, _, _ in
+                let filename = PHAssetResource.assetResources(for: asset)
+                    .first?.originalFilename ?? ""
+                infoByID[asset.localIdentifier] = ClipInfo(
+                    localID: asset.localIdentifier,
+                    filename: filename,
+                    captureDate: asset.creationDate
+                )
+            }
+
+        let extractor = self.extractor
+        let run: @Sendable (String) async -> (String, URL?) = { localID in
+            do {
+                return (localID, try await extractor.extractVideo(fromLocalID: localID))
+            } catch {
+                print("Failed to extract added clip \(localID): \(error)")
+                return (localID, nil)
+            }
+        }
+
+        var urlByID: [String: URL] = [:]
+        await withTaskGroup(of: (String, URL?).self) { group in
+            var next = 0
+            while next < min(LivePhotoExtractor.maxConcurrent, localIDs.count) {
+                group.addTask { [id = localIDs[next]] in await run(id) }
+                next += 1
+            }
+
+            for await (localID, url) in group {
+                if let url { urlByID[localID] = url }
+
+                if next < localIDs.count {
+                    group.addTask { [id = localIDs[next]] in await run(id) }
+                    next += 1
+                }
+            }
+        }
+
+        // 抽出できたものだけを選択順のまま末尾に足す
         var addedCount = 0
-
-        for item in items {
-            guard let localID = item.itemIdentifier else { continue }
-            guard !existingIDs.contains(localID) else { continue }
-
-            let assets = PHAsset.fetchAssets(withLocalIdentifiers: [localID], options: nil)
-            let filename = assets.firstObject.flatMap {
-                PHAssetResource.assetResources(for: $0).first?.originalFilename
-            } ?? ""
-            let captureDate = assets.firstObject?.creationDate
+        for localID in localIDs {
+            guard let url = urlByID[localID] else { continue }
+            let info = infoByID[localID]
 
             let clip = VlogClip(
                 order: currentMaxOrder + 1 + addedCount,
                 sourceCloudID: localID,
-                originalFilename: filename,
-                captureDate: captureDate
+                originalFilename: info?.filename ?? "",
+                captureDate: info?.captureDate
             )
             clip.project = project
             modelContext.insert(clip)
-
-            // 動画を抽出
-            do {
-                let url = try await extractor.extractVideo(fromLocalID: localID)
-                extractedURLs[clip.id] = url
-                addedCount += 1
-            } catch {
-                print("Failed to extract added clip \(clip.id): \(error)")
-                modelContext.delete(clip)
-            }
+            extractedURLs[clip.id] = url
+            addedCount += 1
         }
 
         reorderClips()

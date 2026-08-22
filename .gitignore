@@ -32,3 +32,5 @@ skills-lock.json
 .asc/config.json
 .asc/artifacts/
 .asc/runs/
+
+.worktree/
