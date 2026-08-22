@@ -81,26 +81,51 @@ final class ExtractingViewModel {
             return
         }
 
-        var failedClips: [VlogClip] = []
+        // VlogClip は @Model なので Sendable ではない。子タスクには値だけ渡す
+        let targets = clips.map { (id: $0.id, sourceID: $0.sourceCloudID) }
+        let extractor = self.extractor
 
-        for clip in clips {
+        let run: @Sendable (UUID, String) async -> (UUID, URL?) = { id, sourceID in
             do {
-                let sourceID = clip.sourceCloudID
-                let url: URL
-                if sourceID.contains("/") {
-                    url = try await extractor.extractVideo(fromLocalID: sourceID)
-                } else {
-                    url = try await extractor.extractVideo(fromCloudID: sourceID)
-                }
-                extractedURLs[clip.id] = url
+                let url = sourceID.contains("/")
+                    ? try await extractor.extractVideo(fromLocalID: sourceID)
+                    : try await extractor.extractVideo(fromCloudID: sourceID)
+                return (id, url)
             } catch {
-                print("Failed to extract clip \(clip.id): \(error)")
-                failedClips.append(clip)
+                print("Failed to extract clip \(id): \(error)")
+                return (id, nil)
+            }
+        }
+
+        var failedIDs: Set<UUID> = []
+
+        await withTaskGroup(of: (UUID, URL?).self) { group in
+            var next = 0
+            while next < min(LivePhotoExtractor.maxConcurrent, targets.count) {
+                let target = targets[next]
+                next += 1
+                group.addTask { await run(target.id, target.sourceID) }
             }
 
-            completedCount += 1
-            progress = Double(completedCount) / Double(totalCount)
+            for await (id, url) in group {
+                if let url {
+                    extractedURLs[id] = url
+                } else {
+                    failedIDs.insert(id)
+                }
+
+                completedCount += 1
+                progress = Double(completedCount) / Double(totalCount)
+
+                if next < targets.count {
+                    let target = targets[next]
+                    next += 1
+                    group.addTask { await run(target.id, target.sourceID) }
+                }
+            }
         }
+
+        let failedClips = clips.filter { failedIDs.contains($0.id) }
 
         // 抽出に失敗したクリップを削除して順序を詰める
         for clip in failedClips {

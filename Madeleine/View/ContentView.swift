@@ -144,7 +144,6 @@ struct ContentView: View {
         GlassEffectContainer {
             PhotosPicker(
                 selection: $selectedPhotos,
-                maxSelectionCount: 30,
                 matching: .livePhotos,
                 photoLibrary: .shared()
             ) {
@@ -202,15 +201,19 @@ struct ContentView: View {
             let captureDate: Date?
         }
 
+        // 1枚ずつ fetch すると枚数分メインスレッドが止まるのでまとめて引く
+        let localIDs = items.compactMap(\.itemIdentifier)
         var clipInfos: [ClipInfo] = []
-        for item in items {
-            guard let localID = item.itemIdentifier else { continue }
-            let assets = PHAsset.fetchAssets(withLocalIdentifiers: [localID], options: nil)
-            guard let asset = assets.firstObject else { continue }
-            let filename = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? ""
-            let captureDate = asset.creationDate
-            clipInfos.append(ClipInfo(localID: localID, filename: filename, captureDate: captureDate))
-        }
+        PHAsset.fetchAssets(withLocalIdentifiers: localIDs, options: nil)
+            .enumerateObjects { asset, _, _ in
+                let filename = PHAssetResource.assetResources(for: asset)
+                    .first?.originalFilename ?? ""
+                clipInfos.append(ClipInfo(
+                    localID: asset.localIdentifier,
+                    filename: filename,
+                    captureDate: asset.creationDate
+                ))
+            }
 
         // 撮影日時が古い順にソート
         clipInfos.sort { ($0.captureDate ?? .distantFuture) < ($1.captureDate ?? .distantFuture) }

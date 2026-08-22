@@ -8,6 +8,10 @@
 import Photos
 
 actor LivePhotoExtractor {
+    /// 同時に走らせる抽出の本数。全部を一度に投げると iCloud からのダウンロードと
+    /// temp への書き込みが枚数分同時に走るため上限を設ける
+    static let maxConcurrent = 4
+
     enum ExtractError: Error {
         case assetNotFound
         case notLivePhoto

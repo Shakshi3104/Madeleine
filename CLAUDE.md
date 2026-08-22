@@ -299,31 +299,33 @@ Madeleine/
 8. **`PhotosPickerItem.itemIdentifier` can be nil.** Skip items that have no identifier rather than crashing.
 9. **Set `isNetworkAccessAllowed = true`** on `PHAssetResourceRequestOptions` — users may have source photos in iCloud but not on-device.
 10. **Skip duplicate photos** when adding to an existing project (compare `sourceCloudID`).
+11. **`@Model` types are not `Sendable`.** To extract in parallel, pull the values out first (`id`, `sourceCloudID`) and match the results back by id on the main actor.
+12. **Batch `PHAsset.fetchAssets(withLocalIdentifiers:)`.** Photo selection is unlimited, so fetching one identifier at a time blocks the main thread once per photo.
 
 ### Media
-11. **Apply `preferredTransform`** and normalize translation before scaling in `VideoComposer`.
-12. **Mute audio for MVP.** Stitched one-second clips have audible cuts. Audio / BGM comes later.
-13. **Trim from the center of each Live Photo.** The first ~0.5 s is usually motion blur.
-14. **Clamp trim duration** to source video duration to avoid AVFoundation errors.
-15. **Align timestamp text by `CTLineGetImageBounds`, not advance width.** The left side bearing scales with font size, so aligning layer `x` alone leaves the date and the time off by 3–11 pt, and a narrow glyph like `1` shifts the optical center by ~6 pt.
-16. **Use `en_US_POSIX` for the timestamp `DateFormatter`.** The format is fixed, so a Japanese-calendar locale would otherwise produce unintended month/day values.
-17. **Merge consecutive clips whose timestamp string is identical.** Showing only `HH:mm` makes clips shot in the same minute render the same text; without merging they flicker at each clip boundary and spawn redundant layers.
+13. **Apply `preferredTransform`** and normalize translation before scaling in `VideoComposer`.
+14. **Mute audio for MVP.** Stitched one-second clips have audible cuts. Audio / BGM comes later.
+15. **Trim from the center of each Live Photo.** The first ~0.5 s is usually motion blur.
+16. **Clamp trim duration** to source video duration to avoid AVFoundation errors.
+17. **Align timestamp text by `CTLineGetImageBounds`, not advance width.** The left side bearing scales with font size, so aligning layer `x` alone leaves the date and the time off by 3–11 pt, and a narrow glyph like `1` shifts the optical center by ~6 pt.
+18. **Use `en_US_POSIX` for the timestamp `DateFormatter`.** The format is fixed, so a Japanese-calendar locale would otherwise produce unintended month/day values.
+19. **Merge consecutive clips whose timestamp string is identical.** Showing only `HH:mm` makes clips shot in the same minute render the same text; without merging they flicker at each clip boundary and spawn redundant layers.
 
 ### Liquid Glass
-18. **Do not nest `.glassEffect()`**. Use grouping within a single `.glassEffect()`.
-19. **Do not apply glass to content itself** (photos, video frames, long text blocks).
-20. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist.
-21. **Do not override sheet backgrounds.**
+20. **Do not nest `.glassEffect()`**. Use grouping within a single `.glassEffect()`.
+21. **Do not apply glass to content itself** (photos, video frames, long text blocks).
+22. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist.
+23. **Do not override sheet backgrounds.**
 
 ### UI Conventions
-22. **No TabView** — single NavigationStack flow.
-23. **ContentView is the root** — no separate HomeView.
-24. **Button tint** — bottom toolbar uses `.tint(.primary)`, FAB uses accent color background.
-25. **Date format** — `yyyy/MM/dd HH:mm:ss` for clip capture dates in the UI (the burned-in timestamp is a separate, shorter format — see §12 Media).
-26. **Settings that change the exported video go in the bottom glass group** (orientation, timestamp), not the navigation bar. The navigation bar is for editing the project itself (reorder).
+24. **No TabView** — single NavigationStack flow.
+25. **ContentView is the root** — no separate HomeView.
+26. **Button tint** — bottom toolbar uses `.tint(.primary)`, FAB uses accent color background.
+27. **Date format** — `yyyy/MM/dd HH:mm:ss` for clip capture dates in the UI (the burned-in timestamp is a separate, shorter format — see §12 Media).
+28. **Settings that change the exported video go in the bottom glass group** (orientation, timestamp), not the navigation bar. The navigation bar is for editing the project itself (reorder).
 
 ### Testing
-27. **Simulator cannot capture Live Photos.** Test on a real device with existing Live Photos.
+29. **Simulator cannot capture Live Photos.** Test on a real device with existing Live Photos.
 
 ---
 
