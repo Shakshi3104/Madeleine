@@ -21,7 +21,6 @@ struct VideoComposer {
         let captureDate: Date
     }
 
-    @available(iOS, deprecated: 26.0)
     func compose(
         clips: [VlogClip],
         videoURLs: [UUID: URL],
@@ -34,7 +33,7 @@ struct VideoComposer {
             preferredTrackID: kCMPersistentTrackID_Invalid
         ) else { throw ComposerError.trackCreationFailed }
 
-        var instructions: [AVMutableVideoCompositionInstruction] = []
+        var instructions: [AVVideoCompositionInstruction] = []
         var timestampSegments: [TimestampSegment] = []
         var cursor = CMTime.zero
         let sortedClips = clips.sorted { $0.order < $1.order }
@@ -71,14 +70,16 @@ struct VideoComposer {
             try compositionVideoTrack.insertTimeRange(range, of: srcVideo, at: cursor)
 
             // preferredTransform を適用して向きを正す
-            let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack)
+            var layerConfig = AVVideoCompositionLayerInstruction.Configuration(assetTrack: compositionVideoTrack)
             let transform = try await computeTransform(for: srcVideo, renderSize: renderSize)
-            layerInstruction.setTransform(transform, at: cursor)
+            layerConfig.setTransform(transform, at: cursor)
 
-            let instruction = AVMutableVideoCompositionInstruction()
-            instruction.timeRange = CMTimeRange(start: cursor, duration: clipLen)
-            instruction.layerInstructions = [layerInstruction]
-            instructions.append(instruction)
+            var instructionConfig = AVVideoCompositionInstruction.Configuration()
+            instructionConfig.timeRange = CMTimeRange(start: cursor, duration: clipLen)
+            instructionConfig.layerInstructions = [
+                AVVideoCompositionLayerInstruction(configuration: layerConfig)
+            ]
+            instructions.append(AVVideoCompositionInstruction(configuration: instructionConfig))
 
             if showsTimestamp, let captureDate = clip.captureDate {
                 timestampSegments.append(
@@ -91,17 +92,17 @@ struct VideoComposer {
 
         guard !instructions.isEmpty else { throw ComposerError.noClipsToCompose }
 
-        let videoComp = AVMutableVideoComposition()
-        videoComp.renderSize = renderSize
-        videoComp.frameDuration = CMTime(value: 1, timescale: 30)
-        videoComp.instructions = instructions
+        var config = AVVideoComposition.Configuration()
+        config.renderSize = renderSize
+        config.frameDuration = CMTime(value: 1, timescale: 30)
+        config.instructions = instructions
 
         if showsTimestamp, !timestampSegments.isEmpty {
             // 素材が複数の日付にまたがるときだけ、時刻の上に日付を小さく添える
             let days = Set(timestampSegments.map { Calendar.current.startOfDay(for: $0.captureDate) })
             let showsDate = days.count > 1
 
-            videoComp.animationTool = makeTimestampAnimationTool(
+            config.animationTool = makeTimestampAnimationTool(
                 segments: merging(timestampSegments, showsDate: showsDate),
                 renderSize: renderSize,
                 showsDate: showsDate
@@ -110,7 +111,7 @@ struct VideoComposer {
 
         print("🎬 Composition total duration: \(CMTimeGetSeconds(cursor))s, \(instructions.count) instructions")
 
-        return (composition, videoComp)
+        return (composition, AVVideoComposition(configuration: config))
     }
 
     private func computeTransform(
@@ -307,8 +308,10 @@ struct VideoComposer {
         }
 
         return AVVideoCompositionCoreAnimationTool(
-            postProcessingAsVideoLayer: videoLayer,
-            in: parentLayer
+            configuration: .init(
+                postProcessingAsVideoLayer: videoLayer,
+                containingLayer: parentLayer
+            )
         )
     }
 
