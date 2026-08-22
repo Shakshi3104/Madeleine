@@ -278,6 +278,7 @@ Madeleine/
 - [x] Per-clip crop preview sheet
 - [x] `PrivacyInfo.xcprivacy` (no tracking, no data collection, no Required Reason API access)
 - [x] Removed unused CloudKit + Remote Notifications capabilities ahead of App Store submission
+- [x] Capture-time timestamp burned into the exported video (per-project toggle in the bottom glass group, `HH:mm` in white SF Rounded, `MM.dd` added only when the project spans multiple days)
 
 ---
 
@@ -304,21 +305,25 @@ Madeleine/
 12. **Mute audio for MVP.** Stitched one-second clips have audible cuts. Audio / BGM comes later.
 13. **Trim from the center of each Live Photo.** The first ~0.5 s is usually motion blur.
 14. **Clamp trim duration** to source video duration to avoid AVFoundation errors.
+15. **Align timestamp text by `CTLineGetImageBounds`, not advance width.** The left side bearing scales with font size, so aligning layer `x` alone leaves the date and the time off by 3–11 pt, and a narrow glyph like `1` shifts the optical center by ~6 pt.
+16. **Use `en_US_POSIX` for the timestamp `DateFormatter`.** The format is fixed, so a Japanese-calendar locale would otherwise produce unintended month/day values.
+17. **Merge consecutive clips whose timestamp string is identical.** Showing only `HH:mm` makes clips shot in the same minute render the same text; without merging they flicker at each clip boundary and spawn redundant layers.
 
 ### Liquid Glass
-15. **Do not nest `.glassEffect()`**. Use grouping within a single `.glassEffect()`.
-16. **Do not apply glass to content itself** (photos, video frames, long text blocks).
-17. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist.
-18. **Do not override sheet backgrounds.**
+18. **Do not nest `.glassEffect()`**. Use grouping within a single `.glassEffect()`.
+19. **Do not apply glass to content itself** (photos, video frames, long text blocks).
+20. **`.prominent` is not a valid variant.** Only `.regular`, `.clear`, `.identity` exist.
+21. **Do not override sheet backgrounds.**
 
 ### UI Conventions
-19. **No TabView** — single NavigationStack flow.
-20. **ContentView is the root** — no separate HomeView.
-21. **Button tint** — bottom toolbar uses `.tint(.primary)`, FAB uses accent color background.
-22. **Date format** — `yyyy/MM/dd HH:mm:ss` for clip capture dates.
+22. **No TabView** — single NavigationStack flow.
+23. **ContentView is the root** — no separate HomeView.
+24. **Button tint** — bottom toolbar uses `.tint(.primary)`, FAB uses accent color background.
+25. **Date format** — `yyyy/MM/dd HH:mm:ss` for clip capture dates in the UI (the burned-in timestamp is a separate, shorter format — see §12 Media).
+26. **Settings that change the exported video go in the bottom glass group** (orientation, timestamp), not the navigation bar. The navigation bar is for editing the project itself (reorder).
 
 ### Testing
-23. **Simulator cannot capture Live Photos.** Test on a real device with existing Live Photos.
+27. **Simulator cannot capture Live Photos.** Test on a real device with existing Live Photos.
 
 ---
 

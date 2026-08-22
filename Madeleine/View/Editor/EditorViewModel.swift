@@ -43,6 +43,7 @@ final class EditorViewModel {
     var project: VlogProject
     var extractedURLs: [UUID: URL]
     var orientation: VideoOrientation = .portrait
+    var showsTimestamp = false
     var isGeneratingPreview = false
     var isExporting = false
     var isAddingClips = false
@@ -72,11 +73,18 @@ final class EditorViewModel {
         self.project = project
         self.extractedURLs = extractedURLs
         self.orientation = VideoOrientation(rawValue: project.orientationRaw) ?? .portrait
+        self.showsTimestamp = project.showsTimestamp
     }
 
     func updateOrientation(_ newValue: VideoOrientation) {
         orientation = newValue
         project.orientationRaw = newValue.rawValue
+        project.updatedAt = .now
+    }
+
+    func toggleTimestamp() {
+        showsTimestamp.toggle()
+        project.showsTimestamp = showsTimestamp
         project.updatedAt = .now
     }
 
@@ -90,7 +98,8 @@ final class EditorViewModel {
             let result = try await composer.compose(
                 clips: sortedClips,
                 videoURLs: extractedURLs,
-                renderSize: orientation.renderSize
+                renderSize: orientation.renderSize,
+                showsTimestamp: showsTimestamp
             )
             let url = try await exporter.export(
                 composition: result.0,
@@ -112,7 +121,8 @@ final class EditorViewModel {
             let result = try await composer.compose(
                 clips: sortedClips,
                 videoURLs: extractedURLs,
-                renderSize: orientation.renderSize
+                renderSize: orientation.renderSize,
+                showsTimestamp: showsTimestamp
             )
             let tempURL = try await exporter.export(
                 composition: result.0,

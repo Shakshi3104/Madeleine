@@ -22,6 +22,9 @@ final class VlogProject {
     /// 動画の向き ("portrait" or "landscape")
     var orientationRaw: String = "portrait"
 
+    /// 各クリップに撮影日時のタイムスタンプ（setlog風）を焼き込むかどうか
+    var showsTimestamp: Bool = false
+
     /// 編集レシピ。順序は clip.order の昇順
     @Relationship(deleteRule: .cascade, inverse: \VlogClip.project)
     var clips: [VlogClip]? = []
