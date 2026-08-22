@@ -9,6 +9,9 @@ import AVFoundation
 import UIKit
 
 struct VideoComposer {
+    /// 各クリップから切り出す尺(秒)。クリップごとの調整はせず全クリップ共通で使う
+    static let trimDuration: Double = 1.0
+
     enum ComposerError: Error {
         case trackCreationFailed
         case noClipsToCompose
@@ -52,17 +55,12 @@ struct VideoComposer {
 
             let duration = try await asset.load(.duration)
             let durationSeconds = CMTimeGetSeconds(duration)
-            let trimSeconds = min(clip.trimDuration, durationSeconds)
+            let trimSeconds = min(Self.trimDuration, durationSeconds)
             let clipLen = CMTime(seconds: trimSeconds, preferredTimescale: 600)
 
-            let startTime: CMTime
-            if let ts = clip.trimStart {
-                startTime = CMTime(seconds: min(ts, max(0, durationSeconds - trimSeconds)), preferredTimescale: 600)
-            } else {
-                // 中央から切り出し（負の値にならないようクランプ）
-                let centerSeconds = max(0, (durationSeconds - trimSeconds) / 2.0)
-                startTime = CMTime(seconds: centerSeconds, preferredTimescale: 600)
-            }
+            // 常に中央から切り出し（負の値にならないようクランプ）
+            let centerSeconds = max(0, (durationSeconds - trimSeconds) / 2.0)
+            let startTime = CMTime(seconds: centerSeconds, preferredTimescale: 600)
             let range = CMTimeRange(start: startTime, duration: clipLen)
 
             print("🎬 clip \(clip.order): duration=\(durationSeconds)s, trim=\(trimSeconds)s, start=\(CMTimeGetSeconds(startTime))s")
