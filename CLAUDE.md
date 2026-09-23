@@ -139,6 +139,8 @@ Button { ... } label: { Image(systemName: "square.and.arrow.up").frame(width: 56
 
 ### 6.3 Rules
 
+
+- **Toolbar Cancel / Done / Save are glyphs, not words.** `Button("Cancel", systemImage: "xmark")`, `Button("Done", systemImage: "checkmark")` — a toolbar button given a `systemImage` renders icon-only on iOS and keeps its title as the accessibility label. Buttons inside an alert or confirmation dialog stay text. Shared across Monaka / yomy / Madeleine / LangueDeChat.
 - **No nesting.** A `.glassEffect()` inside another `.glassEffect()` breaks visually.
 - **No glass on content itself.** Glass is for floating chrome, not for photos/video.
 - **Valid variants**: `.regular`, `.clear`, `.identity`. `.prominent` does NOT exist — do not hallucinate it.
