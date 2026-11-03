@@ -230,8 +230,7 @@ Madeleine/
 │   ├── CloudIdentifierResolver.swift   local ⇔ cloud ID conversion
 │   ├── LivePhotoExtractor.swift        PHAsset → paired video URL
 │   ├── VideoComposer.swift             [VlogClip] → AVComposition
-│   ├── VideoExporter.swift             AVAssetExportSession wrapper
-│   └── PhotoLibrarySaver.swift         save to Camera Roll, return cloudID
+│   └── VideoExporter.swift             AVAssetExportSession wrapper
 └── Assets.xcassets
     └── AccentColor (Golden Orange #F5A623)
 ```
@@ -242,7 +241,7 @@ Madeleine/
 
 ### Phase 1 — Foundation
 - [x] Xcode project bootstrapped with SwiftData (CloudKit + Remote Notifications capabilities were enabled at creation but later removed in Phase 5; see Data Strategy §3)
-- [x] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`
+- [x] Info.plist: `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription` (the Add key stays: the share sheet's Save Video needs it)
 - [x] Deployment Target set to iOS 26.0
 - [x] `MadeleineApp.swift` configured
 - [x] Template `Item.swift` and `ContentView.swift` replaced
@@ -256,7 +255,7 @@ Madeleine/
 - [x] `Service/LivePhotoExtractor.swift`
 - [x] `Service/VideoComposer.swift`
 - [x] `Service/VideoExporter.swift`
-- [x] `Service/PhotoLibrarySaver.swift`
+- [x] ~~`Service/PhotoLibrarySaver.swift`~~ — removed; export goes through the share sheet only
 
 ### Phase 4 — Screens
 - [x] `ContentView` (project list, accent-color FAB, NavigationStack)
